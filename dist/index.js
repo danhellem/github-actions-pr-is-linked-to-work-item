@@ -60,8 +60,11 @@ function run() {
         try {
             const context = github.context;
             const pull_request_number = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
-            console.log(`Hello World: ${pull_request_number}`);
+            const github_token = core.getInput('repo-token');
+            const octokit = github.getOctokit(github_token);
+            console.log(`Hello World: ${pull_request_number} : ${github_token}`);
             core.setOutput('time', new Date().toTimeString());
+            octokit == null;
         }
         catch (error) {
             if (error instanceof Error)
