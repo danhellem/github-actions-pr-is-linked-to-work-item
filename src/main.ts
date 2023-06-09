@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { Context } from '@actions/github/lib/context';
+import {Context} from '@actions/github/lib/context'
 
 //import {wait} from './wait'
 
@@ -21,16 +21,16 @@ import { Context } from '@actions/github/lib/context';
 
 async function run(): Promise<void> {
   try {
-    const context: Context = github.context;
-    const pull_request_number = context.payload.pull_request?.number;
-    const github_token: string = core.getInput('repo-token');
+    const context: Context = github.context
+    const pull_request_number = context.payload.pull_request?.number
+    const github_token: string = core.getInput('repo-token')
 
-    const octokit = github.getOctokit(github_token);
-   
+    const octokit = github.getOctokit(github_token)
+
     console.log(`Hello World: ${pull_request_number} : ${github_token}`)
     core.setOutput('time', new Date().toTimeString())
 
-    octokit == null;
+    octokit == null
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
