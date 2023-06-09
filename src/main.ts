@@ -30,6 +30,12 @@ async function run(): Promise<void> {
     console.log(`Hello World: ${pull_request_number} : ${github_token}`)
     core.setOutput('time', new Date().toTimeString())
 
+    await octokit.rest.issues.createComment({
+      ...context.repo,
+      issue_number: pull_request_number!,
+      body: 'Hello World!'
+    });
+
     octokit == null
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
