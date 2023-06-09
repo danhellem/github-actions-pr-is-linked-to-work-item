@@ -1,6 +1,6 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Pull request is linked to a work item in Azure DevOps'
+description: 'GitHub Action to check if a PR is linked to a work item in Azure DevOps'
+author: 'Dan Hellem'
 inputs:
   milliseconds: # change this
     required: true

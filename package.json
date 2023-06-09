@@ -2,7 +2,7 @@
   "name": "github-actions-pr-is-linked-to-work-item",
   "version": "0.0.1",
   "private": true,
-  "description": "A GitHub Action to check if a PR is linked to a work item in Azure DevOps",
+  "description": "GitHub Action to check if a PR is linked to a work item in Azure DevOps",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
