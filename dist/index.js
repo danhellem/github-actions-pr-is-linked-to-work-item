@@ -64,6 +64,7 @@ function run() {
             const octokit = github.getOctokit(github_token);
             console.log(`Hello World: ${pull_request_number} : ${github_token}`);
             core.setOutput('time', new Date().toTimeString());
+            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: 'Hello World!' }));
             octokit == null;
         }
         catch (error) {
