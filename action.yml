@@ -2,10 +2,10 @@ name: 'Pull request is linked to a work item in Azure DevOps'
 description: 'GitHub Action to check if a PR is linked to a work item in Azure DevOps'
 author: 'Dan Hellem'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  repo-token:
+    description: 'Github token of the repository (automatically created by GitHub)'
+    default: ${{ github.token }}
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
