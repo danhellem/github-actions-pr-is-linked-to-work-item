@@ -40,6 +40,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
+//import {wait} from './wait'
 // async function run(): Promise<void> {
 //   try {
 //     const ms: string = core.getInput('milliseconds')
@@ -55,7 +56,8 @@ const core = __importStar(__nccwpck_require__(186));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            return 1;
+            console.log(`Hello World!`);
+            core.setOutput('time', new Date().toTimeString());
         }
         catch (error) {
             if (error instanceof Error)

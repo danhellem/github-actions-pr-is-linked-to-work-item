@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+//import {wait} from './wait'
 
 // async function run(): Promise<void> {
 //   try {
@@ -16,11 +16,11 @@ import {wait} from './wait'
 //   }
 // }
 
-async function run() {
-  try { 
-     return 1; 
-  } 
-  catch (error) {    
+async function run(): Promise<void> {
+  try {
+    console.log(`Hello World!`)
+    core.setOutput('time', new Date().toTimeString())
+  } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
