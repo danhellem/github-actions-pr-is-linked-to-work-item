@@ -1,4 +1,7 @@
 import * as core from '@actions/core'
+import * as github from '@actions/github'
+import { Context } from '@actions/github/lib/context';
+
 //import {wait} from './wait'
 
 // async function run(): Promise<void> {
@@ -18,7 +21,10 @@ import * as core from '@actions/core'
 
 async function run(): Promise<void> {
   try {
-    console.log(`Hello World!`)
+    const context: Context = github.context;
+    const pull_request_number = context.payload.pull_request?.number;
+
+    console.log(`Hello World: ${pull_request_number}`)
     core.setOutput('time', new Date().toTimeString())
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
