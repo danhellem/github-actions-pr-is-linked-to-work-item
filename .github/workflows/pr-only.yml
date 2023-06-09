@@ -1,5 +1,5 @@
 name: 'pull-request-test-only'
-on: # rebuild any PRs and main branch changes
+on: # rebuild any PRs for main branch changes
   pull_request:
     types: [opened, reopened, edited]
     branches:
@@ -12,4 +12,4 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          milliseconds: 1000
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

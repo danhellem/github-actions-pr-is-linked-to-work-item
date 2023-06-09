@@ -23,9 +23,14 @@ async function run(): Promise<void> {
   try {
     const context: Context = github.context;
     const pull_request_number = context.payload.pull_request?.number;
+    const github_token: string = core.getInput('repo-token');
 
-    console.log(`Hello World: ${pull_request_number}`)
+    const octokit = github.getOctokit(github_token);
+   
+    console.log(`Hello World: ${pull_request_number} : ${github_token}`)
     core.setOutput('time', new Date().toTimeString())
+
+    octokit == null;
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
