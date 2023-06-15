@@ -22,19 +22,33 @@ import {Context} from '@actions/github/lib/context'
 async function run(): Promise<void> {
   try {
     const context: Context = github.context
-    const pull_request_number = context.payload.pull_request?.number
+    const pull_request_number = context.payload.pull_request?.number ?? 0
+    const pull_request_description = context.payload.pull_request?.body
     const github_token: string = core.getInput('repo-token')
 
     const octokit = github.getOctokit(github_token)
 
-    console.log(`Hello World: ${pull_request_number} : ${github_token}`)
-    core.setOutput('time', new Date().toTimeString())
+    // check if pull request description contains a link to an Azure Boards work item
+    if (
+      pull_request_description?.includes('[AB#') &&
+      pull_request_description?.includes('/_workitems/edit/')
+    ) {
+      await octokit.rest.issues.createComment({
+        ...context.repo,
+        issue_number: pull_request_number,
+        body: 'Pull request description contains a link to an Azure Boards work item.'
+      })
+    } else {
+      await octokit.rest.issues.createComment({
+        ...context.repo,
+        issue_number: pull_request_number,
+        body: 'Pull request does not contain a link to an Azure Boards work item. Use AB#<work item number> in the pull request description or comment.'
+      })
 
-    await octokit.rest.issues.createComment({
-      ...context.repo,
-      issue_number: pull_request_number!,
-      body: 'Hello World!'
-    });
+      core.setFailed(
+        'Pull request does not contain a link to an Azure Boards work item.'
+      )
+    }
 
     octokit == null
   } catch (error) {

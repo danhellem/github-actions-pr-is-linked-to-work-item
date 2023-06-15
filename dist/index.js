@@ -55,16 +55,23 @@ const github = __importStar(__nccwpck_require__(5438));
 //   }
 // }
 function run() {
-    var _a;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
-            const pull_request_number = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number;
+            const pull_request_number = (_b = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number) !== null && _b !== void 0 ? _b : 0;
+            const pull_request_description = (_c = context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.body;
             const github_token = core.getInput('repo-token');
             const octokit = github.getOctokit(github_token);
-            console.log(`Hello World: ${pull_request_number} : ${github_token}`);
-            core.setOutput('time', new Date().toTimeString());
-            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: 'Hello World!' }));
+            // check if pull request description contains a link to an Azure Boards work item
+            if ((pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('[AB#')) &&
+                (pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('/_workitems/edit/'))) {
+                yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: 'Pull request description contains a link to an Azure Boards work item.' }));
+            }
+            else {
+                yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: 'Pull request does not contain a link to an Azure Boards work item. Use AB#<work item number> in the pull request description or comment.' }));
+                core.setFailed('Pull request does not contain a link to an Azure Boards work item.');
+            }
             octokit == null;
         }
         catch (error) {
