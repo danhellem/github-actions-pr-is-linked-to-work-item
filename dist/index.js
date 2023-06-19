@@ -78,7 +78,7 @@ function run() {
                     return;
                 }
                 else {
-                    console.log("Bot did not successfully create a link from AB#" + work_item_id);
+                    console.log("Bot did not create a link from AB#" + work_item_id);
                 }
             }
             else {
