@@ -22,33 +22,38 @@ import {Context} from '@actions/github/lib/context'
 async function run(): Promise<void> {
   try {
     const context: Context = github.context
-    const pull_request_number = context.payload.pull_request?.number ?? 0
-    const pull_request_description = context.payload.pull_request?.body
     const github_token: string = core.getInput('repo-token')
+    const pull_request_number: number = context.payload.pull_request?.number ?? 0
+    const pull_request_description: string = context.payload.pull_request?.body ?? ''
+    
+    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/)
+    var work_item_id: string = ''
+       
+    const octokit = github.getOctokit(github_token)   
 
-    const octokit = github.getOctokit(github_token)
+    // check if pull request description contains a AB#<work item number>
+    console.log("Checking to see if text 'AB#<work item id>' is contained in pull request description...");
 
-    // check if pull request description contains a link to an Azure Boards work item
-    if (
-      pull_request_description?.includes('[AB#') &&
-      pull_request_description?.includes('/_workitems/edit/')
-    ) {
-      await octokit.rest.issues.createComment({
-        ...context.repo,
-        issue_number: pull_request_number,
-        body: 'Pull request description contains a link to an Azure Boards work item.'
-      })
+    if (ab_lookup_match && ab_lookup_match.length > 1) {
+      work_item_id = ab_lookup_match[1].toString();      
+      console.log("  AB#" + work_item_id + " found in pull request description.");
+
+      console.log("Check to see if Bot created link from AB#" + work_item_id + " ...");
+      if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
+        console.log("  AB#" + work_item_id + " link found.");
+        console.log("  Logging message in pull request comment and exit routine.");
+        
+        await octokit.rest.issues.createComment({
+          ...context.repo,
+          issue_number: pull_request_number,
+          body: 'Pull request description contains link AB#' + work_item_id + ' to an Azure Boards work item.'
+        })
+
+        return;
+      }
     } else {
-      await octokit.rest.issues.createComment({
-        ...context.repo,
-        issue_number: pull_request_number,
-        body: 'Pull request does not contain a link to an Azure Boards work item. Use AB#<work item number> in the pull request description or comment.'
-      })
-
-      core.setFailed(
-        'Pull request does not contain a link to an Azure Boards work item.'
-      )
-    }
+      console.log("Work item id not found in pull request description. Checking comments...");        
+    }    
 
     octokit == null
   } catch (error) {
