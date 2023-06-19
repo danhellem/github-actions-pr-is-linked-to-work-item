@@ -1,5 +1,6 @@
 {
     "hello": "world",
     "foo": "bar", 
-    "hello": "world"
+    "hello": "world",
+    "yes": "no"
 }
