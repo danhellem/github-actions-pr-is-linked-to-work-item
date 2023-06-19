@@ -32,16 +32,16 @@ async function run(): Promise<void> {
     const octokit = github.getOctokit(github_token)   
 
     // check if pull request description contains a AB#<work item number>
-    console.log("Checking to see if text 'AB#<work item id>' is contained in pull request description...");
+    console.log("Checking to see if text 'AB#<work item id>' is contained in pull request...");
 
     if (ab_lookup_match && ab_lookup_match.length > 1) {
       work_item_id = ab_lookup_match[1].toString();      
-      console.log("  AB#" + work_item_id + " found in pull request description.");
+      console.log("AB#" + work_item_id + " found in pull request description.");
 
-      console.log("Check to see if Bot created link from AB#" + work_item_id + " ...");
+      console.log("Checking to see if bot created link from AB#" + work_item_id + " ...");      
       if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
-        console.log("  AB#" + work_item_id + " link found.");
-        console.log("  Logging message in pull request comment and exit routine.");
+        console.log("AB#" + work_item_id + " link found.");
+        console.log("Logging message in pull request comment and exit routine.");
         
         await octokit.rest.issues.createComment({
           ...context.repo,
@@ -50,6 +50,9 @@ async function run(): Promise<void> {
         })
 
         return;
+      }
+      else {
+        console.log("Bot did not create a link from AB#" + work_item_id);       
       }
     } else {
       console.log("Work item id not found in pull request description. Checking comments...");        
