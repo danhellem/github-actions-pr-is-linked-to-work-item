@@ -53,7 +53,7 @@ function run() {
             let work_item_id = '';
             const octokit = github.getOctokit(github_token);
             console.log(`Event name: ${context.eventName}`);
-            if (context.eventName == 'pull_request') {
+            if (context.eventName === 'pull_request') {
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking to see if text 'AB#<work item id>' is contained in pull request...`);
                 if (ab_lookup_match && ab_lookup_match.length > 1) {
@@ -69,20 +69,21 @@ function run() {
                     else {
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
                         yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item.` }));
-                        core.setFailed('Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item');
+                        core.setFailed(`Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item`);
                     }
                 }
                 else {
-                    console.log(`Pull request description does not contain AB#<work item id>`);
-                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Pull request description does not contain AB#<work item id>.` }));
-                    core.setFailed('Pull request description does not contain AB#<work item id>');
+                    console.log(`Pull request description does not contain AB#{work item id}`);
+                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Pull request description does not contain AB#{work item id}.` }));
+                    core.setFailed('Pull request description does not contain AB#{work item id}');
                 }
             }
-            if (context.eventName == 'issues_comment') {
+            if (context.eventName === 'issue_comment') {
                 console.log((_e = context.payload.pull_request) === null || _e === void 0 ? void 0 : _e.comments);
                 //context.payload.pull_request?.comments.forEach(async (comment: { body: string }) => {
                 //   console.log("Checking comment: " + comment.body);
                 //});
+                return;
             }
             octokit == null;
         }

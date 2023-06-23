@@ -15,7 +15,7 @@ async function run(): Promise<void> {
 
     console.log(`Event name: ${context.eventName}`)
 
-    if (context.eventName == 'pull_request') {     
+    if (context.eventName === 'pull_request') {     
 
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking to see if text 'AB#<work item id>' is contained in pull request...`)
@@ -46,28 +46,30 @@ async function run(): Promise<void> {
             body: `Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item.`
           }) 
           
-          core.setFailed('Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item')
+          core.setFailed(`Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item`)
         }      
       }   
       else {    
-          console.log(`Pull request description does not contain AB#<work item id>`)
+          console.log(`Pull request description does not contain AB#{work item id}`)
                    
           await octokit.rest.issues.createComment({
             ...context.repo,
             issue_number: pull_request_number,
-            body: `Pull request description does not contain AB#<work item id>.`
+            body: `Pull request description does not contain AB#{work item id}.`
           }) 
           
-          core.setFailed('Pull request description does not contain AB#<work item id>')
+          core.setFailed('Pull request description does not contain AB#{work item id}')
       }    
     }  
 
-    if (context.eventName == 'issues_comment') {  
+    if (context.eventName === 'issue_comment') {  
       console.log(context.payload.pull_request?.comments)
 
       //context.payload.pull_request?.comments.forEach(async (comment: { body: string }) => {
       //   console.log("Checking comment: " + comment.body);
       //});
+
+      return
     }
 
     octokit == null
