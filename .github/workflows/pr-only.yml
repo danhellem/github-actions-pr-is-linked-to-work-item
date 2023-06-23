@@ -12,7 +12,7 @@ on: # rebuild any PRs for main branch changes
 jobs:
   test: 
     name: Create Edit or Comment
-    if: ${{ github.event.issue.pull_request || github.event_name == 'pull_request' }}
+    # if: ${{ github.event.issue.pull_request || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
