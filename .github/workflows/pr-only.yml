@@ -4,7 +4,7 @@ on: # rebuild any PRs for main branch changes
     types: [opened, reopened, edited]
     branches:
       - main 
- issue_comment:
+  issue_comment:
     types: [created, edited]
     branches:
       - main
