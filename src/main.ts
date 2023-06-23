@@ -39,6 +39,7 @@ async function run(): Promise<void> {
         }
         else {
           console.log(`Bot did not create a link from AB#${work_item_id}`)
+          
           await octokit.rest.issues.createComment({
             ...context.repo,
             issue_number: pull_request_number,
