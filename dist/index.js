@@ -41,19 +41,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-//import {wait} from './wait'
-// async function run(): Promise<void> {
-//   try {
-//     const ms: string = core.getInput('milliseconds')
-//     core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-//     core.debug(new Date().toTimeString())
-//     await wait(parseInt(ms, 10))
-//     core.debug(new Date().toTimeString())
-//     core.setOutput('time', new Date().toTimeString())
-//   } catch (error) {
-//     if (error instanceof Error) core.setFailed(error.message)
-//   }
-// }
 function run() {
     var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
@@ -63,23 +50,23 @@ function run() {
             const pull_request_number = (_b = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number) !== null && _b !== void 0 ? _b : 0;
             const pull_request_description = (_d = (_c = context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.body) !== null && _d !== void 0 ? _d : '';
             const ab_lookup_match = pull_request_description.match(/\AB#\s*([^ ]*)/);
-            var work_item_id = '';
+            let work_item_id = '';
             const octokit = github.getOctokit(github_token);
-            console.log("Event: " + context.eventName);
+            console.log('Event: ', context.eventName);
             // check if pull request description contains a AB#<work item number>
-            console.log("Checking to see if text 'AB#<work item id>' is contained in pull request...");
+            console.log(`Checking to see if text 'AB#<work item id>' is contained in pull request...`);
             if (ab_lookup_match && ab_lookup_match.length > 1) {
                 work_item_id = ab_lookup_match[1].toString();
-                console.log("AB#" + work_item_id + " found in pull request description.");
-                console.log("Checking to see if bot created link from AB#" + work_item_id + " ...");
+                console.log(`AB#${work_item_id} found in pull request description.`);
+                console.log(`Checking to see if bot created link from AB#${work_item_id} ...`);
                 if ((pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('[AB#')) && (pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('/_workitems/edit/'))) {
-                    console.log("AB#" + work_item_id + " link found.");
-                    console.log("Logging message in pull request comment and exit routine.");
-                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: 'Pull request description contains link AB#' + work_item_id + ' to an Azure Boards work item.' }));
+                    console.log(`AB#${work_item_id} link found.`);
+                    console.log('Logging message in pull request comment and exit routine.');
+                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Pull request description contains link AB#${work_item_id} to an Azure Boards work item.` }));
                     return;
                 }
                 else {
-                    console.log("Bot did not create a link from AB#" + work_item_id);
+                    console.log(`Bot did not create a link from AB#${work_item_id}`);
                     yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Pull request description contains AB#${work_item_id} but the Bot could not link to an Azure Boards work item.` }));
                 }
             }
@@ -95,9 +82,9 @@ function run() {
             if (error instanceof Error)
                 core.setFailed(error.message);
         }
-        run();
     });
 }
+run();
 
 
 /***/ }),
