@@ -15,7 +15,7 @@ async function run(): Promise<void> {
 
     console.log(`Event name: ${context.eventName}`)
 
-    if (context.eventName !== 'pull_request') {     
+    if (context.eventName == 'pull_request') {     
 
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking to see if text 'AB#<work item id>' is contained in pull request...`)
@@ -62,7 +62,7 @@ async function run(): Promise<void> {
       }    
     }  
 
-    if (context.eventName !== 'issues_comment') {  
+    if (context.eventName == 'issues_comment') {  
       console.log(context.payload.pull_request?.comments)
 
       //context.payload.pull_request?.comments.forEach(async (comment: { body: string }) => {
