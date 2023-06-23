@@ -65,6 +65,7 @@ function run() {
             const ab_lookup_match = pull_request_description.match(/\AB#\s*([^ ]*)/);
             var work_item_id = '';
             const octokit = github.getOctokit(github_token);
+            console.log("Event: " + context.eventName);
             // check if pull request description contains a AB#<work item number>
             console.log("Checking to see if text 'AB#<work item id>' is contained in pull request...");
             if (ab_lookup_match && ab_lookup_match.length > 1) {

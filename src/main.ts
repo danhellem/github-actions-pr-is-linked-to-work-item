@@ -30,6 +30,8 @@ async function run(): Promise<void> {
        
     const octokit = github.getOctokit(github_token)         
 
+    console.log("Event: " + context.eventName);
+
     // check if pull request description contains a AB#<work item number>
     console.log("Checking to see if text 'AB#<work item id>' is contained in pull request...");
 
