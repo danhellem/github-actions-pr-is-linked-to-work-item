@@ -4,15 +4,15 @@ on: # rebuild any PRs for main branch changes
     types: [opened, reopened, edited]
     branches:
       - main 
- # issue_comment:
- #   types: [created, edited]
- #   branches:
- #     - main
+ issue_comment:
+    types: [created, edited]
+    branches:
+      - main
 
 jobs:
   test: 
     name: Create Edit or Comment
-    # if: ${{ github.event.issue.pull_request || github.event_name == 'pull_request' }}
+    if: ${{ github.event.issue.pull_request || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
