@@ -1,4 +1,4 @@
-name: 'pull-request-test-only'
+name: 'Check pull request contains AB# with a valid work item id'
 on: # rebuild any PRs for main branch changes
   pull_request:
     types: [opened, reopened, edited]
@@ -10,18 +10,8 @@ on: # rebuild any PRs for main branch changes
       - main
 
 jobs:
-  create-edit-pr: 
-    name: Create or edit pull request
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-  add-comment:
-    name: add comment
-    if: ${{ github.event_name == 'issue_comment' }}
+  create-edit-comment:
+    name: Validate for AB#    
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

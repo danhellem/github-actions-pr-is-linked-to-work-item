@@ -14,11 +14,14 @@ async function run(): Promise<void> {
     const octokit = github.getOctokit(github_token)         
 
     console.log(`Event name: ${context.eventName}`)
+    console.log(`Pull request number: ${pull_request_number}`)
+    console.log(`Pull request description: ${pull_request_description}`)
+    console.log(`Comment: ${context.payload.comment?.body}`)
 
     if (context.eventName === 'pull_request') {     
 
       // check if pull request description contains a AB#<work item number>
-      console.log(`Checking to see if text 'AB#<work item id>' is contained in pull request...`)
+      console.log(`Checking to see if text 'AB#{work item id}' is contained in pull request...`)
 
       if (ab_lookup_match && ab_lookup_match.length > 1) {
         work_item_id = ab_lookup_match[1].toString()    

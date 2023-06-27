@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -53,9 +53,12 @@ function run() {
             let work_item_id = '';
             const octokit = github.getOctokit(github_token);
             console.log(`Event name: ${context.eventName}`);
+            console.log(`Pull request number: ${pull_request_number}`);
+            console.log(`Pull request description: ${pull_request_description}`);
+            console.log(`Comment: ${(_e = context.payload.comment) === null || _e === void 0 ? void 0 : _e.body}`);
             if (context.eventName === 'pull_request') {
                 // check if pull request description contains a AB#<work item number>
-                console.log(`Checking to see if text 'AB#<work item id>' is contained in pull request...`);
+                console.log(`Checking to see if text 'AB#{work item id}' is contained in pull request...`);
                 if (ab_lookup_match && ab_lookup_match.length > 1) {
                     work_item_id = ab_lookup_match[1].toString();
                     console.log(`AB#${work_item_id} found in pull request description.`);
@@ -79,7 +82,7 @@ function run() {
                 }
             }
             if (context.eventName === 'issue_comment') {
-                console.log((_e = context.payload.comment) === null || _e === void 0 ? void 0 : _e.body);
+                console.log((_f = context.payload.comment) === null || _f === void 0 ? void 0 : _f.body);
                 //context.payload.pull_request?.comments.forEach(async (comment: { body: string }) => {
                 //   console.log("Checking comment: " + comment.body);
                 //});
