@@ -79,7 +79,7 @@ function run() {
                 }
             }
             if (context.eventName === 'issue_comment') {
-                console.log((_e = context.payload.pull_request) === null || _e === void 0 ? void 0 : _e.comments);
+                console.log((_e = context.payload.comment) === null || _e === void 0 ? void 0 : _e.body);
                 //context.payload.pull_request?.comments.forEach(async (comment: { body: string }) => {
                 //   console.log("Checking comment: " + comment.body);
                 //});

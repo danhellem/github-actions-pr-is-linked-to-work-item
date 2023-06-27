@@ -63,7 +63,7 @@ async function run(): Promise<void> {
     }  
 
     if (context.eventName === 'issue_comment') {  
-      console.log(context.payload.pull_request?.comments)
+      console.log(context.payload.comment?.body)
 
       //context.payload.pull_request?.comments.forEach(async (comment: { body: string }) => {
       //   console.log("Checking comment: " + comment.body);
