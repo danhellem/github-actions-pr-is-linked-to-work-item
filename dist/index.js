@@ -41,9 +41,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const querystring_1 = __nccwpck_require__(3477);
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -52,14 +51,19 @@ function run() {
             const issue_number = (_d = (_c = context.payload.issue) === null || _c === void 0 ? void 0 : _c.number) !== null && _d !== void 0 ? _d : 0;
             const pull_request_description = (_f = (_e = context.payload.pull_request) === null || _e === void 0 ? void 0 : _e.body) !== null && _f !== void 0 ? _f : '';
             const ab_lookup_match = pull_request_description.match(/\AB#\s*([^ ]*)/);
+            const repository_owner = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.owner.login) !== null && _h !== void 0 ? _h : '';
+            const repository_name = (_k = (_j = context.payload.repository) === null || _j === void 0 ? void 0 : _j.name) !== null && _k !== void 0 ? _k : '';
+            const sender_login = (_m = (_l = context.payload.sender) === null || _l === void 0 ? void 0 : _l.login) !== null && _m !== void 0 ? _m : '';
             let work_item_id = '';
             const octokit = github.getOctokit(github_token);
-            console.log((0, querystring_1.stringify)(context.payload));
+            console.log(`Repository owner: ${repository_owner}`);
+            console.log(`Repository name: ${repository_name}`);
+            console.log(`Sender login: ${sender_login}`);
             console.log(`Event name: ${context.eventName}`);
             console.log(`Pull request number: ${pull_request_number}`);
             console.log(`Issue number: ${issue_number}`);
             console.log(`Pull request description: ${pull_request_description}`);
-            console.log(`Comment: ${(_g = context.payload.comment) === null || _g === void 0 ? void 0 : _g.body}`);
+            console.log(`Comment: ${(_o = context.payload.comment) === null || _o === void 0 ? void 0 : _o.body}`);
             if (context.eventName === 'pull_request') {
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{work item id} ...`);
@@ -9783,14 +9787,6 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("punycode");
-
-/***/ }),
-
-/***/ 3477:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("querystring");
 
 /***/ }),
 

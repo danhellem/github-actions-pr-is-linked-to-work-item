@@ -10,12 +10,17 @@ async function run(): Promise<void> {
     const pull_request_number: number = context.payload.pull_request?.number ?? 0
     const issue_number: number = context.payload.issue?.number ?? 0 
     const pull_request_description: string = context.payload.pull_request?.body ?? ''    
-    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/)  
+    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/) 
+    const repository_owner: string = context.payload.repository?.owner.login ?? '' 
+    const repository_name: string = context.payload.repository?.name ?? ''
+    const sender_login: string = context.payload.sender?.login ?? ''
     let work_item_id = ''
 
     const octokit = github.getOctokit(github_token)        
-    
-    console.log(stringify(context.payload))
+
+    console.log(`Repository owner: ${repository_owner}`)
+    console.log(`Repository name: ${repository_name}`)  
+    console.log(`Sender login: ${sender_login}`)
     console.log(`Event name: ${context.eventName}`)
     console.log(`Pull request number: ${pull_request_number}`)
     console.log(`Issue number: ${issue_number}`)
