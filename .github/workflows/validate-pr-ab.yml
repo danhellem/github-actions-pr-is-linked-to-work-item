@@ -1,14 +1,9 @@
-name: 'Check pull request contains AB# with a valid work item id'
+name: 'Contains AB# with a valid work item id'
 on: # rebuild any PRs for main branch changes
   pull_request:
     types: [opened, reopened, edited]
     branches:
       - main 
-  issue_comment:
-    types: [created, edited]
-    branches:
-      - main
-
 jobs:
   create-edit-comment:
     name: Validate for AB#    
@@ -16,5 +11,3 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}

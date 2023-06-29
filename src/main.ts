@@ -7,8 +7,7 @@ async function run(): Promise<void> {
   try {
     const context: Context = github.context
     const github_token: string = core.getInput('repo-token')    
-    const pull_request_number: number = context.payload.pull_request?.number ?? 0
-    const issue_number: number = context.payload.issue?.number ?? 0 
+    const pull_request_number: number = context.payload.pull_request?.number ?? 0    
     const pull_request_description: string = context.payload.pull_request?.body ?? ''    
     const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/) 
     const repository_owner: string = context.payload.repository?.owner.login ?? '' 
@@ -18,14 +17,13 @@ async function run(): Promise<void> {
 
     const octokit = github.getOctokit(github_token)        
 
-    console.log(`Repository owner: ${repository_owner}`)
-    console.log(`Repository name: ${repository_name}`)  
-    console.log(`Sender login: ${sender_login}`)
-    console.log(`Event name: ${context.eventName}`)
-    console.log(`Pull request number: ${pull_request_number}`)
-    console.log(`Issue number: ${issue_number}`)
-    console.log(`Pull request description: ${pull_request_description}`)
-    console.log(`Comment: ${context.payload.comment?.body}`)
+    //console.log(`Repository owner: ${repository_owner}`)
+    //console.log(`Repository name: ${repository_name}`)  
+    //console.log(`Sender login: ${sender_login}`)
+    //console.log(`Event name: ${context.eventName}`)
+    //console.log(`Pull request number: ${pull_request_number}`)   
+    //console.log(`Pull request description: ${pull_request_description}`)
+    //console.log(`Comment: ${context.payload.comment?.body}`)
 
     if (context.eventName === 'pull_request') {     
 
@@ -38,14 +36,14 @@ async function run(): Promise<void> {
         console.log(`Checking to see if bot created link ...`)    
           
         if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
-          console.log(`AB#${work_item_id} link found.`)
-          console.log('Logging message as comment and exit routine.')
+          console.log(`Success: AB#${work_item_id} link found.`)
+          console.log('Done.')
             
-          await octokit.rest.issues.createComment({
-            ...context.repo,
-            issue_number: pull_request_number,
-            body: `Description contains link AB#${work_item_id} to an Azure Boards work item.`
-          })
+          //await octokit.rest.issues.createComment({
+          //  ...context.repo,
+          //  issue_number: pull_request_number,
+          //  body: `Description contains link AB#${work_item_id} to an Azure Boards work item.`
+          //})
 
           return
         }
@@ -55,7 +53,7 @@ async function run(): Promise<void> {
           await octokit.rest.issues.createComment({
             ...context.repo,
             issue_number: pull_request_number,
-            body: `Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.`
+            body: `Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
           }) 
           
           core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
@@ -67,19 +65,12 @@ async function run(): Promise<void> {
           await octokit.rest.issues.createComment({
             ...context.repo,
             issue_number: pull_request_number,
-            body: `Description does not contain AB#{work item id}.`
+            body: `Description does not contain AB#{work item id}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
           }) 
           
           core.setFailed('Description does not contain AB#{work item id}')
       }    
-    }  
-
-    if (context.eventName === 'issue_comment') {  
-      
-      //await octokit.rest.issues.listComments()
-      
-      core.setFailed('Comment does not contain AB#')  
-    }
+    } 
 
     octokit == null
   } catch (error) {

@@ -42,28 +42,26 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
             const github_token = core.getInput('repo-token');
             const pull_request_number = (_b = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number) !== null && _b !== void 0 ? _b : 0;
-            const issue_number = (_d = (_c = context.payload.issue) === null || _c === void 0 ? void 0 : _c.number) !== null && _d !== void 0 ? _d : 0;
-            const pull_request_description = (_f = (_e = context.payload.pull_request) === null || _e === void 0 ? void 0 : _e.body) !== null && _f !== void 0 ? _f : '';
+            const pull_request_description = (_d = (_c = context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.body) !== null && _d !== void 0 ? _d : '';
             const ab_lookup_match = pull_request_description.match(/\AB#\s*([^ ]*)/);
-            const repository_owner = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.owner.login) !== null && _h !== void 0 ? _h : '';
-            const repository_name = (_k = (_j = context.payload.repository) === null || _j === void 0 ? void 0 : _j.name) !== null && _k !== void 0 ? _k : '';
-            const sender_login = (_m = (_l = context.payload.sender) === null || _l === void 0 ? void 0 : _l.login) !== null && _m !== void 0 ? _m : '';
+            const repository_owner = (_f = (_e = context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login) !== null && _f !== void 0 ? _f : '';
+            const repository_name = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : '';
+            const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
             let work_item_id = '';
             const octokit = github.getOctokit(github_token);
-            console.log(`Repository owner: ${repository_owner}`);
-            console.log(`Repository name: ${repository_name}`);
-            console.log(`Sender login: ${sender_login}`);
-            console.log(`Event name: ${context.eventName}`);
-            console.log(`Pull request number: ${pull_request_number}`);
-            console.log(`Issue number: ${issue_number}`);
-            console.log(`Pull request description: ${pull_request_description}`);
-            console.log(`Comment: ${(_o = context.payload.comment) === null || _o === void 0 ? void 0 : _o.body}`);
+            //console.log(`Repository owner: ${repository_owner}`)
+            //console.log(`Repository name: ${repository_name}`)  
+            //console.log(`Sender login: ${sender_login}`)
+            //console.log(`Event name: ${context.eventName}`)
+            //console.log(`Pull request number: ${pull_request_number}`)   
+            //console.log(`Pull request description: ${pull_request_description}`)
+            //console.log(`Comment: ${context.payload.comment?.body}`)
             if (context.eventName === 'pull_request') {
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{work item id} ...`);
@@ -72,26 +70,26 @@ function run() {
                     console.log(`AB#${work_item_id} found in pull request description.`);
                     console.log(`Checking to see if bot created link ...`);
                     if ((pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('[AB#')) && (pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('/_workitems/edit/'))) {
-                        console.log(`AB#${work_item_id} link found.`);
-                        console.log('Logging message as comment and exit routine.');
-                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description contains link AB#${work_item_id} to an Azure Boards work item.` }));
+                        console.log(`Success: AB#${work_item_id} link found.`);
+                        console.log('Done.');
+                        //await octokit.rest.issues.createComment({
+                        //  ...context.repo,
+                        //  issue_number: pull_request_number,
+                        //  body: `Description contains link AB#${work_item_id} to an Azure Boards work item.`
+                        //})
                         return;
                     }
                     else {
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
-                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.` }));
+                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
                         core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`);
                     }
                 }
                 else {
                     console.log(`Description does not contain AB#{work item id}`);
-                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description does not contain AB#{work item id}.` }));
+                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description does not contain AB#{work item id}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
                     core.setFailed('Description does not contain AB#{work item id}');
                 }
-            }
-            if (context.eventName === 'issue_comment') {
-                //await octokit.rest.issues.listComments()
-                core.setFailed('Comment does not contain AB#');
             }
             octokit == null;
         }
