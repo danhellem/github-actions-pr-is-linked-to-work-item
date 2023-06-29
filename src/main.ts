@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Context} from '@actions/github/lib/context'
-import { stringify } from 'querystring'
 
 async function run(): Promise<void> {
   try {
@@ -10,8 +9,8 @@ async function run(): Promise<void> {
     const pull_request_number: number = context.payload.pull_request?.number ?? 0    
     const pull_request_description: string = context.payload.pull_request?.body ?? ''    
     const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/) 
-    const repository_owner: string = context.payload.repository?.owner.login ?? '' 
-    const repository_name: string = context.payload.repository?.name ?? ''
+    //const repository_owner: string = context.payload.repository?.owner.login ?? '' 
+    //const repository_name: string = context.payload.repository?.name ?? ''
     const sender_login: string = context.payload.sender?.login ?? ''
     let work_item_id = ''
 
@@ -25,10 +24,17 @@ async function run(): Promise<void> {
     //console.log(`Pull request description: ${pull_request_description}`)
     //console.log(`Comment: ${context.payload.comment?.body}`)
 
+    // if the sender in the azure-boards bot, then exit code
+    // nothing needs to be done
+    if (sender_login === "azure-boards[bot]") {
+      console.log(`azure-boards[bot] sender, exiting action.`)
+      return
+    }
+
     if (context.eventName === 'pull_request') {     
 
       // check if pull request description contains a AB#<work item number>
-      console.log(`Checking description for AB#{work item id} ...`)
+      console.log(`Checking description for AB#{ID} ...`)
 
       if (ab_lookup_match && ab_lookup_match.length > 1) {
         work_item_id = ab_lookup_match[1].toString()    
@@ -60,15 +66,15 @@ async function run(): Promise<void> {
         }      
       }   
       else {    
-          console.log(`Description does not contain AB#{work item id}`)
+          console.log(`Description does not contain AB#{ID}`)
                    
           await octokit.rest.issues.createComment({
             ...context.repo,
             issue_number: pull_request_number,
-            body: `Description does not contain AB#{work item id}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
+            body: `Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
           }) 
           
-          core.setFailed('Description does not contain AB#{work item id}')
+          core.setFailed('Description does not contain AB#{ID}')
       }    
     } 
 

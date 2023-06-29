@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -50,9 +50,9 @@ function run() {
             const pull_request_number = (_b = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number) !== null && _b !== void 0 ? _b : 0;
             const pull_request_description = (_d = (_c = context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.body) !== null && _d !== void 0 ? _d : '';
             const ab_lookup_match = pull_request_description.match(/\AB#\s*([^ ]*)/);
-            const repository_owner = (_f = (_e = context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login) !== null && _f !== void 0 ? _f : '';
-            const repository_name = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : '';
-            const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
+            //const repository_owner: string = context.payload.repository?.owner.login ?? '' 
+            //const repository_name: string = context.payload.repository?.name ?? ''
+            const sender_login = (_f = (_e = context.payload.sender) === null || _e === void 0 ? void 0 : _e.login) !== null && _f !== void 0 ? _f : '';
             let work_item_id = '';
             const octokit = github.getOctokit(github_token);
             //console.log(`Repository owner: ${repository_owner}`)
@@ -62,9 +62,15 @@ function run() {
             //console.log(`Pull request number: ${pull_request_number}`)   
             //console.log(`Pull request description: ${pull_request_description}`)
             //console.log(`Comment: ${context.payload.comment?.body}`)
+            // if the sender in the azure-boards bot, then exit code
+            // nothing needs to be done
+            if (sender_login === "azure-boards[bot]") {
+                console.log(`azure-boards[bot] sender, exiting action.`);
+                return;
+            }
             if (context.eventName === 'pull_request') {
                 // check if pull request description contains a AB#<work item number>
-                console.log(`Checking description for AB#{work item id} ...`);
+                console.log(`Checking description for AB#{ID} ...`);
                 if (ab_lookup_match && ab_lookup_match.length > 1) {
                     work_item_id = ab_lookup_match[1].toString();
                     console.log(`AB#${work_item_id} found in pull request description.`);
@@ -86,9 +92,9 @@ function run() {
                     }
                 }
                 else {
-                    console.log(`Description does not contain AB#{work item id}`);
-                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description does not contain AB#{work item id}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
-                    core.setFailed('Description does not contain AB#{work item id}');
+                    console.log(`Description does not contain AB#{ID}`);
+                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
+                    core.setFailed('Description does not contain AB#{ID}');
                 }
             }
             octokit == null;
