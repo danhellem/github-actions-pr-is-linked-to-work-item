@@ -32,7 +32,7 @@ async function run(): Promise<void> {
     }
 
     if (context.eventName === 'pull_request') {   
-      
+            
       try {
         const response = await octokit.rest.issues.listComments({
           owner: repository_owner,
@@ -40,8 +40,18 @@ async function run(): Promise<void> {
           issue_number:  pull_request_number,
         })
 
-        console.log('Comments:')
-        console.log(response.data)
+        if (response.data.length > 0) {
+          const comments: IComments[] = response.data.map((comment) => {
+            return {
+              id: comment.id, 
+              created_at: comment.created_at,
+              body: comment.body
+            }
+          })  
+          console.log('Comments:')
+          console.log(comments)        
+        }
+        
       } catch (error) {
         console.log(error)
       }    
@@ -95,6 +105,12 @@ async function run(): Promise<void> {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+interface IComments {
+  id: number | undefined,
+  created_at: string | undefined,
+  body: string | undefined,
 }
 
 run()

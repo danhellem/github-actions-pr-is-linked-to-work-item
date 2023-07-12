@@ -75,8 +75,17 @@ function run() {
                         repo: repository_name,
                         issue_number: pull_request_number,
                     });
-                    console.log('Comments:');
-                    console.log(response.data);
+                    if (response.data.length > 0) {
+                        const comments = response.data.map((comment) => {
+                            return {
+                                id: comment.id,
+                                created_at: comment.created_at,
+                                body: comment.body
+                            };
+                        });
+                        console.log('Comments:');
+                        console.log(comments);
+                    }
                 }
                 catch (error) {
                     console.log(error);
