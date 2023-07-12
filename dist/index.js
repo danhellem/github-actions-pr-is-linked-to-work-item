@@ -79,10 +79,11 @@ function run() {
                         const comments = response.data.map((comment) => {
                             return {
                                 id: comment.id,
-                                created_at: comment.created_at,
+                                created_at: new Date(comment.created_at),
                                 body: comment.body
                             };
                         });
+                        comments.sort((a, b) => { var _a, _b; return ((_a = a.created_at) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = b.created_at) === null || _b === void 0 ? void 0 : _b.getTime()); });
                         console.log('Comments:');
                         console.log(comments);
                     }

@@ -44,10 +44,13 @@ async function run(): Promise<void> {
           const comments: IComments[] = response.data.map((comment) => {
             return {
               id: comment.id, 
-              created_at: comment.created_at,
+              created_at: new Date(comment.created_at),
               body: comment.body
             }
           })  
+
+          comments.sort((a, b) => a.created_at?.getTime()! - b.created_at?.getTime()!) 
+          
           console.log('Comments:')
           console.log(comments)        
         }
@@ -108,8 +111,8 @@ async function run(): Promise<void> {
 }
 
 interface IComments {
-  id: number | undefined,
-  created_at: string | undefined,
+  id: Number | undefined,
+  created_at: Date | undefined,
   body: string | undefined,
 }
 
