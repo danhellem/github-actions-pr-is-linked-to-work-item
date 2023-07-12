@@ -49,7 +49,7 @@ async function run(): Promise<void> {
             }
           })  
 
-          comments.sort((a, b) => a.created_at?.getTime()! - b.created_at?.getTime()!) 
+          comments.sort((a, b) => b.created_at?.getTime()! - a.created_at?.getTime()!) 
           
           console.log('Comments:')
           console.log(comments)        

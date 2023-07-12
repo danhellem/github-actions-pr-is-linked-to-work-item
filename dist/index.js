@@ -83,7 +83,7 @@ function run() {
                                 body: comment.body
                             };
                         });
-                        comments.sort((a, b) => { var _a, _b; return ((_a = a.created_at) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = b.created_at) === null || _b === void 0 ? void 0 : _b.getTime()); });
+                        comments.sort((a, b) => { var _a, _b; return ((_a = b.created_at) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = a.created_at) === null || _b === void 0 ? void 0 : _b.getTime()); });
                         console.log('Comments:');
                         console.log(comments);
                     }
