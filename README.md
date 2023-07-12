@@ -13,6 +13,10 @@ Make sure the GitHub repository is properly linked to an Azure DevOps project. T
 - [Connect a GitHub repository to Azure Boards](https://learn.microsoft.com/en-us/azure/devops/boards/github/add-remove-repositories?view=azure-devops)
 - [Link GitHub commits and pull requests to work items in Azure Boards](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops)
 
+## How it works
+
+The action will check the pull request description for ``AB#`` and a valid work item id. If it finds a valid work item id, it will pass. If it does not find a valid work item id, it will fail.
+
 ## validate-pr-ab.yml
 
 Create the following ``.yml`` file and place into the ``.github/workflows`` folder.

@@ -8,7 +8,7 @@ async function run(): Promise<void> {
     const github_token: string = core.getInput('repo-token')    
     const pull_request_number: number = context.payload.pull_request?.number ?? 0    
     const pull_request_description: string = context.payload.pull_request?.body ?? ''    
-    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/) 
+    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/AB#([^ \]]+)/g) 
     const repository_owner: string = context.payload.repository?.owner.login ?? '' 
     const repository_name: string = context.payload.repository?.name ?? ''
     const sender_login: string = context.payload.sender?.login ?? ''
@@ -82,9 +82,14 @@ async function run(): Promise<void> {
 
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking description for AB#{ID} ...`)
+     
+      if (ab_lookup_match && ab_lookup_match.length > 1) {        
+        
+        for (const match of ab_lookup_match) {
+          work_item_id = match.substring(3)
+          break    
+        }
 
-      if (ab_lookup_match && ab_lookup_match.length > 1) {
-        work_item_id = ab_lookup_match[1].toString()        
         console.log(`AB#${work_item_id} found in pull request description.`)
         console.log(`Checking to see if bot created link ...`)    
           
@@ -117,9 +122,7 @@ async function run(): Promise<void> {
           core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
         }      
       }   
-      else {    
-          console.log(`Description does not contain AB#{ID}`)
-          
+      else {   
           if (last_comment_posted_by_action !== "failed (1)") {
             await octokit.rest.issues.createComment({
               ...context.repo,
