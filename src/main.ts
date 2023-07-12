@@ -9,8 +9,8 @@ async function run(): Promise<void> {
     const pull_request_number: number = context.payload.pull_request?.number ?? 0    
     const pull_request_description: string = context.payload.pull_request?.body ?? ''    
     const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/\AB#\s*([^ ]*)/) 
-    //const repository_owner: string = context.payload.repository?.owner.login ?? '' 
-    //const repository_name: string = context.payload.repository?.name ?? ''
+    const repository_owner: string = context.payload.repository?.owner.login ?? '' 
+    const repository_name: string = context.payload.repository?.name ?? ''
     const sender_login: string = context.payload.sender?.login ?? ''
     let work_item_id = ''
 
@@ -31,7 +31,20 @@ async function run(): Promise<void> {
       return
     }
 
-    if (context.eventName === 'pull_request') {     
+    if (context.eventName === 'pull_request') {   
+      
+      try {
+        const response = await octokit.rest.issues.listComments({
+          owner: repository_owner,
+          repo: repository_name,
+          issue_number:  pull_request_number,
+        })
+
+        console.log('Comments:')
+        console.log(response.data)
+      } catch (error) {
+        console.log(error)
+      }    
 
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking description for AB#{ID} ...`)

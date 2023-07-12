@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -50,9 +50,9 @@ function run() {
             const pull_request_number = (_b = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number) !== null && _b !== void 0 ? _b : 0;
             const pull_request_description = (_d = (_c = context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.body) !== null && _d !== void 0 ? _d : '';
             const ab_lookup_match = pull_request_description.match(/\AB#\s*([^ ]*)/);
-            //const repository_owner: string = context.payload.repository?.owner.login ?? '' 
-            //const repository_name: string = context.payload.repository?.name ?? ''
-            const sender_login = (_f = (_e = context.payload.sender) === null || _e === void 0 ? void 0 : _e.login) !== null && _f !== void 0 ? _f : '';
+            const repository_owner = (_f = (_e = context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login) !== null && _f !== void 0 ? _f : '';
+            const repository_name = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : '';
+            const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
             let work_item_id = '';
             const octokit = github.getOctokit(github_token);
             //console.log(`Repository owner: ${repository_owner}`)
@@ -69,6 +69,18 @@ function run() {
                 return;
             }
             if (context.eventName === 'pull_request') {
+                try {
+                    const response = yield octokit.rest.issues.listComments({
+                        owner: repository_owner,
+                        repo: repository_name,
+                        issue_number: pull_request_number,
+                    });
+                    console.log('Comments:');
+                    console.log(response.data);
+                }
+                catch (error) {
+                    console.log(error);
+                }
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{ID} ...`);
                 if (ab_lookup_match && ab_lookup_match.length > 1) {
