@@ -12,7 +12,9 @@ async function run(): Promise<void> {
     const repository_owner: string = context.payload.repository?.owner.login ?? '' 
     const repository_name: string = context.payload.repository?.name ?? ''
     const sender_login: string = context.payload.sender?.login ?? ''
+    
     let work_item_id = ''
+    let last_comment_posted_by_action = ""    
 
     const octokit = github.getOctokit(github_token)        
 
@@ -32,7 +34,8 @@ async function run(): Promise<void> {
     }
 
     if (context.eventName === 'pull_request') {   
-            
+      
+      // get all comments for the pull request
       try {
         const response = await octokit.rest.issues.listComments({
           owner: repository_owner,
@@ -40,6 +43,7 @@ async function run(): Promise<void> {
           issue_number:  pull_request_number,
         })
 
+        // check for comments
         if (response.data.length > 0) {
           const comments: IComments[] = response.data.map((comment) => {
             return {
@@ -49,10 +53,27 @@ async function run(): Promise<void> {
             }
           })  
 
+          // sort comments by date descending
           comments.sort((a, b) => b.created_at?.getTime()! - a.created_at?.getTime()!) 
           
-          console.log('Comments:')
-          console.log(comments)        
+          // loop through comments and grab the most recent comment posted by this action
+          // we want to use this to check later so we don't post duplicate comments
+          for (const comment of comments) { 
+            if (comment.body?.includes('Work item link check failed. Description does not contain AB#{ID}.')) { 
+              last_comment_posted_by_action = "failed (1)"
+              break
+            }
+
+            if (comment.body?.includes('Work item link check failed. Description contains AB#')) { 
+              last_comment_posted_by_action = "failed (2)"
+              break
+            }        
+            
+            if (comment.body?.includes('Work item link check complete.')) {
+              last_comment_posted_by_action = "complete"
+              break
+            }
+          }          
         }
         
       } catch (error) {
@@ -63,43 +84,50 @@ async function run(): Promise<void> {
       console.log(`Checking description for AB#{ID} ...`)
 
       if (ab_lookup_match && ab_lookup_match.length > 1) {
-        work_item_id = ab_lookup_match[1].toString()    
+        work_item_id = ab_lookup_match[1].toString()        
         console.log(`AB#${work_item_id} found in pull request description.`)
         console.log(`Checking to see if bot created link ...`)    
           
         if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
           console.log(`Success: AB#${work_item_id} link found.`)
           console.log('Done.')
-            
-          //await octokit.rest.issues.createComment({
-          //  ...context.repo,
-          //  issue_number: pull_request_number,
-          //  body: `Description contains link AB#${work_item_id} to an Azure Boards work item.`
-          //})
+          
+          // if the last comment is the check failed, now it passed and we can post a new comment
+          if (last_comment_posted_by_action !== "complete") {
+            await octokit.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pull_request_number,
+              body: `Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.`
+            })
+          }
 
           return
         }
         else {
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
-          await octokit.rest.issues.createComment({
-            ...context.repo,
-            issue_number: pull_request_number,
-            body: `Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
-          }) 
+          if (last_comment_posted_by_action !== "failed (2)") {
+            await octokit.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pull_request_number,
+              body: `Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
+            }) 
+          }
           
           core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
         }      
       }   
       else {    
           console.log(`Description does not contain AB#{ID}`)
-                   
-          await octokit.rest.issues.createComment({
-            ...context.repo,
-            issue_number: pull_request_number,
-            body: `Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
-          }) 
           
+          if (last_comment_posted_by_action !== "failed (1)") {
+            await octokit.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pull_request_number,
+              body: `Work item link check failed. Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
+            }) 
+          }
+
           core.setFailed('Description does not contain AB#{ID}')
       }    
     } 

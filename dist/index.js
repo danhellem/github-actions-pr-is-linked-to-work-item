@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -54,6 +54,7 @@ function run() {
             const repository_name = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : '';
             const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
             let work_item_id = '';
+            let last_comment_posted_by_action = "";
             const octokit = github.getOctokit(github_token);
             //console.log(`Repository owner: ${repository_owner}`)
             //console.log(`Repository name: ${repository_name}`)  
@@ -69,12 +70,14 @@ function run() {
                 return;
             }
             if (context.eventName === 'pull_request') {
+                // get all comments for the pull request
                 try {
                     const response = yield octokit.rest.issues.listComments({
                         owner: repository_owner,
                         repo: repository_name,
                         issue_number: pull_request_number,
                     });
+                    // check for comments
                     if (response.data.length > 0) {
                         const comments = response.data.map((comment) => {
                             return {
@@ -83,9 +86,24 @@ function run() {
                                 body: comment.body
                             };
                         });
+                        // sort comments by date descending
                         comments.sort((a, b) => { var _a, _b; return ((_a = b.created_at) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = a.created_at) === null || _b === void 0 ? void 0 : _b.getTime()); });
-                        console.log('Comments:');
-                        console.log(comments);
+                        // loop through comments and grab the most recent comment posted by this action
+                        // we want to use this to check later so we don't post duplicate comments
+                        for (const comment of comments) {
+                            if ((_l = comment.body) === null || _l === void 0 ? void 0 : _l.includes('Work item link check failed. Description does not contain AB#{ID}.')) {
+                                last_comment_posted_by_action = "failed (1)";
+                                break;
+                            }
+                            if ((_m = comment.body) === null || _m === void 0 ? void 0 : _m.includes('Work item link check failed. Description contains AB#')) {
+                                last_comment_posted_by_action = "failed (2)";
+                                break;
+                            }
+                            if ((_o = comment.body) === null || _o === void 0 ? void 0 : _o.includes('Work item link check complete.')) {
+                                last_comment_posted_by_action = "complete";
+                                break;
+                            }
+                        }
                     }
                 }
                 catch (error) {
@@ -100,22 +118,25 @@ function run() {
                     if ((pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('[AB#')) && (pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('/_workitems/edit/'))) {
                         console.log(`Success: AB#${work_item_id} link found.`);
                         console.log('Done.');
-                        //await octokit.rest.issues.createComment({
-                        //  ...context.repo,
-                        //  issue_number: pull_request_number,
-                        //  body: `Description contains link AB#${work_item_id} to an Azure Boards work item.`
-                        //})
+                        // if the last comment is the check failed, now it passed and we can post a new comment
+                        if (last_comment_posted_by_action !== "complete") {
+                            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.` }));
+                        }
                         return;
                     }
                     else {
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
-                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
+                        if (last_comment_posted_by_action !== "failed (2)") {
+                            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
+                        }
                         core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`);
                     }
                 }
                 else {
                     console.log(`Description does not contain AB#{ID}`);
-                    yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
+                    if (last_comment_posted_by_action !== "failed (1)") {
+                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `Work item link check failed. Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).` }));
+                    }
                     core.setFailed('Description does not contain AB#{ID}');
                 }
             }
