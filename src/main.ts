@@ -59,18 +59,18 @@ async function run(): Promise<void> {
           // loop through comments and grab the most recent comment posted by this action
           // we want to use this to check later so we don't post duplicate comments
           for (const comment of comments) { 
-            if (comment.body?.includes('Work item link check failed. Description does not contain AB#{ID}.')) { 
-              last_comment_posted_by_action = "failed (1)"
+            if (comment.body?.includes('lcc-404')) { 
+              last_comment_posted_by_action = "lcc-404"
               break
             }
 
-            if (comment.body?.includes('Work item link check failed. Description contains AB#')) { 
-              last_comment_posted_by_action = "failed (2)"
+            if (comment.body?.includes('lcc-416')) { 
+              last_comment_posted_by_action = "lcc-416"
               break
             }        
             
-            if (comment.body?.includes('Work item link check complete.')) {
-              last_comment_posted_by_action = "complete"
+            if (comment.body?.includes('lcc-200')) {
+              last_comment_posted_by_action = "lcc-200"
               break
             }
           }          
@@ -83,7 +83,7 @@ async function run(): Promise<void> {
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking description for AB#{ID} ...`)
      
-      if (ab_lookup_match && ab_lookup_match.length > 1) {        
+      if (ab_lookup_match) {        
         
         for (const match of ab_lookup_match) {
           work_item_id = match.substring(3)
@@ -98,11 +98,15 @@ async function run(): Promise<void> {
           console.log('Done.')
           
           // if the last comment is the check failed, now it passed and we can post a new comment
-          if (last_comment_posted_by_action !== "complete") {
+          if (last_comment_posted_by_action !== "lcc-200") { 
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.`
+              body: `
+                Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.
+              
+                *code: lcc-200*
+              `
             })
           }
 
@@ -111,11 +115,15 @@ async function run(): Promise<void> {
         else {
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
-          if (last_comment_posted_by_action !== "failed (2)") {
+          if (last_comment_posted_by_action !== "lcc-416") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
+              body: `
+                Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).
+              
+                *code: lcc-416*
+              `
             }) 
           }
           
@@ -123,11 +131,15 @@ async function run(): Promise<void> {
         }      
       }   
       else {   
-          if (last_comment_posted_by_action !== "failed (1)") {
+          if (last_comment_posted_by_action !== "lcc-404") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `Work item link check failed. Description does not contain AB#{ID}. [Learn more](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items).`
+              body: `
+                Work item link check failed. Description does not contain AB#{ID}. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.
+                
+                *code: lcc-404*
+              `
             }) 
           }
 
