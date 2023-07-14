@@ -17,7 +17,7 @@ Make sure the GitHub repository is properly linked to an Azure DevOps project. T
 
 The action will check the pull request description for ``AB#`` and a valid work item id. If it finds a valid work item id, it will pass. If it does not find a valid work item id, it will fail.
 
-If the sender is ``azure-boards[bot]`` or ``dependabot[bot]`` the action will ignore the check.
+If the sender is ``dependabot[bot]`` the action will ignore the check.
 
 ## 🔑 Permissions
 
