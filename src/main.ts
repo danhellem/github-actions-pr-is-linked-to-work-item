@@ -28,10 +28,12 @@ async function run(): Promise<void> {
 
     // if the sender in the azure-boards bot or dependabot, then exit code
     // nothing needs to be done
-    if (sender_login === "azure-boards[bot]" || sender_login === "dependabot[bot]") {
-      console.log(`azure-boards[bot] or dependabot[bot] sender, exiting action.`)
+    if (sender_login === "dependabot[bot]") {
+      console.log(`dependabot[bot] sender, exiting action.`)
       return
     }
+
+    //azure-boards[bot]
 
     if (context.eventName === 'pull_request') {   
       
