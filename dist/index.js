@@ -58,7 +58,7 @@ function run() {
             const octokit = github.getOctokit(github_token);
             //console.log(`Repository owner: ${repository_owner}`)
             //console.log(`Repository name: ${repository_name}`)  
-            //console.log(`Sender login: ${sender_login}`)
+            console.log(`Sender login: ${sender_login}`);
             //console.log(`Event name: ${context.eventName}`)
             //console.log(`Pull request number: ${pull_request_number}`)   
             //console.log(`Pull request description: ${pull_request_description}`)
