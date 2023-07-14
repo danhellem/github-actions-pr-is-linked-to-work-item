@@ -19,6 +19,16 @@ The action will check the pull request description for ``AB#`` and a valid work 
 
 If the sender is ``azure-boards[bot]`` or ``dependabot[bot]`` the action will ignore the check.
 
+## 🔑 Permissions
+
+You might get an error whent the action is run. If you open the error log and see something like this:
+
+``
+"Error: Resource not accessible by integration" 
+``
+
+To fix this, go to ``https://github.com/{owner}/{repo}/settings/actions`` and in **Workflow Permissions** section give actions **Read and Write permissions**. That provides the token with rights to modify your repo and solves your problem.
+
 ## ✅ Codes
 
 We use a series of code values to mark and check previous comments to ensure the actions does not get too chatty after each run. For example, if you don't add ``AB#{ID}`` to the description, we don't need to tell you every time you update the desciption. We will only tell you once untill something changes.
@@ -53,3 +63,7 @@ jobs:
     steps:
       - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
 ```
+
+# 🪲 Known issues
+
+- When you add AB# the ``azure-boards[bot]`` runs to link the AB#{ID} to the work item. However, the action is triggered first and fails becuase the work item is not linked yet. Then the bot runs to link. This creates an extra failed message to show up in the comments. This is a known issue and we are working on a way to fix it.
