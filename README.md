@@ -1,4 +1,4 @@
-# 🎬 Action, check for linked Azure DevOps work item
+# Action, check for linked Azure DevOps work item
 
 Use this action to check your pull request to make sure it is linked to a work item using ``AB#`` before you can merge.
 
