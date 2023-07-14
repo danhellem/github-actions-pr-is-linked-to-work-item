@@ -1,9 +1,6 @@
 name: 'Check for AB#'
 description: 'Check if the pull request is linked to a work item in Azure DevOps'
 author: 'Dan Hellem'
-branding:
-  icon: "book-open"
-  color: "green"
 inputs:
   repo-token:
     description: 'Github token of the repository (automatically created by GitHub)'
