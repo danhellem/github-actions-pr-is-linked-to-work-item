@@ -2,7 +2,7 @@
 
 Use this action to check your pull request to make sure it is linked to a work item using ``AB#`` before you can merge.
 
-Click here to see the action in the GitHub marketplace.
+Click here to see the action in the [GitHub marketplace](https://github.com/marketplace/actions/check-for-ab).
 
 ## 💁‍♂️ Usage
 
