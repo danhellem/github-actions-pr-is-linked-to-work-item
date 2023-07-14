@@ -51,6 +51,5 @@ jobs:
     name: check   
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./
+      - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
 ```
