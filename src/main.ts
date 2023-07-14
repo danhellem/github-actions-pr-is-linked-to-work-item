@@ -20,16 +20,16 @@ async function run(): Promise<void> {
 
     //console.log(`Repository owner: ${repository_owner}`)
     //console.log(`Repository name: ${repository_name}`)  
-    console.log(`Sender login: ${sender_login}`)
+    //console.log(`Sender login: ${sender_login}`)
     //console.log(`Event name: ${context.eventName}`)
     //console.log(`Pull request number: ${pull_request_number}`)   
     //console.log(`Pull request description: ${pull_request_description}`)
     //console.log(`Comment: ${context.payload.comment?.body}`)
 
-    // if the sender in the azure-boards bot, then exit code
+    // if the sender in the azure-boards bot or dependabot, then exit code
     // nothing needs to be done
-    if (sender_login === "azure-boards[bot]") {
-      console.log(`azure-boards[bot] sender, exiting action.`)
+    if (sender_login === "azure-boards[bot]" || sender_login === "dependabot[bot]") {
+      console.log(`azure-boards[bot] or dependabot[bot] sender, exiting action.`)
       return
     }
 
