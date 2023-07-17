@@ -94,7 +94,8 @@ async function run(): Promise<void> {
 
         console.log(`AB#${work_item_id} found in pull request description.`)
         console.log(`Checking to see if bot created link ...`)    
-          
+        
+        // check if the description contains a link to the work item
         if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
           console.log(`Success: AB#${work_item_id} link found.`)
           console.log('Done.')
@@ -104,32 +105,37 @@ async function run(): Promise<void> {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item. <br><br>*code: lcc-200*`
+              body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item. <br><br>*code: lcc-200*`
             })
           }
 
           return
         }
-        else {
+        
+        // becuase of the sequence of events, we only would to check this if the sender is the boards bot 
+        if (sender_login === "azure-boards[bot]") {
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
           if (last_comment_posted_by_action !== "lcc-416") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.<br><br>*code: lcc-416*`
+              body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.<br><br>*code: lcc-416*`
             }) 
           }
           
           core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
-        }      
+        }    
+        
+        core.warning(`Description contains AB#${work_item_id} and waiting for the azure-boards[bot] to validate the link`)
+        return
       }   
       else {   
           if (last_comment_posted_by_action !== "lcc-404") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: ` Work item link check failed. Description does not contain AB#{ID}. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.<br><br>*code: lcc-404*`
+              body: `❌ Work item link check failed. Description does not contain AB#{ID}. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.<br><br>*code: lcc-404*`
             }) 
           }
 
