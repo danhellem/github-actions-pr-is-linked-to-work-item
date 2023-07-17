@@ -63,7 +63,3 @@ jobs:
     steps:
       - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
 ```
-
-# 🪲 Known issues
-
-- When you add AB# the ``azure-boards[bot]`` runs to link the AB#{ID} to the work item. However, the action is triggered first and fails becuase the work item is not linked yet. Then the bot runs to link. This creates an extra failed message to show up in the comments. This is a known issue and we are working on a way to fix it.
