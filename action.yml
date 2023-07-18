@@ -1,4 +1,4 @@
-name: 'Check for AB#'
+name: 'Azure Boards, check for AB#'
 description: 'Check if the pull request is linked to a work item in Azure DevOps'
 author: 'danhellem'
 branding:
