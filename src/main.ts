@@ -130,7 +130,7 @@ async function run(): Promise<void> {
           // check if the description contains a link to the work item
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
-          if (last_comment_posted_by_action !== "lcc-416") {
+          if (last_comment_posted_by_action !== "lcc-416" && sender_login !== "azure-boards[bot]") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,

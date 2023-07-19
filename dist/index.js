@@ -143,7 +143,7 @@ function run() {
                     else {
                         // check if the description contains a link to the work item
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
-                        if (last_comment_posted_by_action !== "lcc-416") {
+                        if (last_comment_posted_by_action !== "lcc-416" && sender_login !== "azure-boards[bot]") {
                             yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->` }));
                         }
                         core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`);
