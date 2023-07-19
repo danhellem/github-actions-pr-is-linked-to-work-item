@@ -14,18 +14,9 @@ async function run(): Promise<void> {
     const sender_login: string = context.payload.sender?.login ?? ''
     
     let work_item_id = ''
-    let last_comment_posted_by_action = ""  
-    let last_comment_posted_by_action_id = 0
+    let last_comment_posted_by_action = ""     
 
-    const octokit = github.getOctokit(github_token)        
-
-    //console.log(`Repository owner: ${repository_owner}`)
-    //console.log(`Repository name: ${repository_name}`)  
-    //console.log(`Sender login: ${sender_login}`)
-    //console.log(`Event name: ${context.eventName}`)
-    //console.log(`Pull request number: ${pull_request_number}`)   
-    //console.log(`Pull request description: ${pull_request_description}`)
-    //console.log(`Comment: ${context.payload.comment?.body}`)
+    const octokit = github.getOctokit(github_token)    
 
     // if the sender in the azure-boards bot or dependabot, then exit code
     // nothing needs to be done
@@ -33,8 +24,6 @@ async function run(): Promise<void> {
       console.log(`dependabot[bot] sender, exiting action.`)
       return
     }
-
-    //azure-boards[bot]
 
     if (context.eventName === 'pull_request') {   
       
@@ -61,9 +50,7 @@ async function run(): Promise<void> {
           
           // loop through comments and grab the most recent comment posted by this action
           // we want to use this to check later so we don't post duplicate comments
-          for (const comment of comments) { 
-            
-            last_comment_posted_by_action_id = comment.id ?? 0
+          for (const comment of comments) {     
             
             if (comment.body?.includes('lcc-404')) { 
               last_comment_posted_by_action = "lcc-404"
@@ -134,7 +121,7 @@ async function run(): Promise<void> {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->`
+              body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->`
             }) 
           }
           
@@ -149,7 +136,7 @@ async function run(): Promise<void> {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
-              body: `❌ Work item link check failed. Description does not contain AB#{ID}. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->`
+              body: `❌ Work item link check failed. Description does not contain AB#{ID}.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->`
             }) 
           }
 
