@@ -14,7 +14,8 @@ async function run(): Promise<void> {
     const sender_login: string = context.payload.sender?.login ?? ''
     
     let work_item_id = ''
-    let last_comment_posted_by_action = ""    
+    let last_comment_posted_by_action = ""  
+    let last_comment_posted_by_action_id = 0
 
     const octokit = github.getOctokit(github_token)        
 
@@ -61,6 +62,9 @@ async function run(): Promise<void> {
           // loop through comments and grab the most recent comment posted by this action
           // we want to use this to check later so we don't post duplicate comments
           for (const comment of comments) { 
+            
+            last_comment_posted_by_action_id = comment.id ?? 0
+            
             if (comment.body?.includes('lcc-404')) { 
               last_comment_posted_by_action = "lcc-404"
               break
@@ -99,6 +103,17 @@ async function run(): Promise<void> {
         if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
           console.log(`Success: AB#${work_item_id} link found.`)
           console.log('Done.')
+
+          // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
+          if (last_comment_posted_by_action === "lcc-416" && sender_login === "azure-boards[bot]") {
+            console.log(`Deleting last comment posted by action: ${last_comment_posted_by_action_id}`)
+            
+            await octokit.rest.issues.deleteComment({
+              owner: repository_owner,
+              repo: repository_name,
+              comment_id: last_comment_posted_by_action_id
+            })
+          }
           
           // if the last comment is the check failed, now it passed and we can post a new comment
           if (last_comment_posted_by_action !== "lcc-200") { 
@@ -111,9 +126,8 @@ async function run(): Promise<void> {
 
           return
         }
-        
-        // becuase of the sequence of events, we only would to check this if the sender is the boards bot 
-        if (sender_login === "azure-boards[bot]") {
+        else {
+          // check if the description contains a link to the work item
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
           if (last_comment_posted_by_action !== "lcc-416") {
@@ -150,7 +164,7 @@ async function run(): Promise<void> {
 }
 
 interface IComments {
-  id: Number | undefined,
+  id: number | undefined,
   created_at: Date | undefined,
   body: string | undefined,
 }

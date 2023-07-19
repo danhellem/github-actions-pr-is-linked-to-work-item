@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -55,6 +55,7 @@ function run() {
             const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
             let work_item_id = '';
             let last_comment_posted_by_action = "";
+            let last_comment_posted_by_action_id = 0;
             const octokit = github.getOctokit(github_token);
             //console.log(`Repository owner: ${repository_owner}`)
             //console.log(`Repository name: ${repository_name}`)  
@@ -92,15 +93,16 @@ function run() {
                         // loop through comments and grab the most recent comment posted by this action
                         // we want to use this to check later so we don't post duplicate comments
                         for (const comment of comments) {
-                            if ((_l = comment.body) === null || _l === void 0 ? void 0 : _l.includes('lcc-404')) {
+                            last_comment_posted_by_action_id = (_l = comment.id) !== null && _l !== void 0 ? _l : 0;
+                            if ((_m = comment.body) === null || _m === void 0 ? void 0 : _m.includes('lcc-404')) {
                                 last_comment_posted_by_action = "lcc-404";
                                 break;
                             }
-                            if ((_m = comment.body) === null || _m === void 0 ? void 0 : _m.includes('lcc-416')) {
+                            if ((_o = comment.body) === null || _o === void 0 ? void 0 : _o.includes('lcc-416')) {
                                 last_comment_posted_by_action = "lcc-416";
                                 break;
                             }
-                            if ((_o = comment.body) === null || _o === void 0 ? void 0 : _o.includes('lcc-200')) {
+                            if ((_p = comment.body) === null || _p === void 0 ? void 0 : _p.includes('lcc-200')) {
                                 last_comment_posted_by_action = "lcc-200";
                                 break;
                             }
@@ -123,14 +125,23 @@ function run() {
                     if ((pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('[AB#')) && (pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('/_workitems/edit/'))) {
                         console.log(`Success: AB#${work_item_id} link found.`);
                         console.log('Done.');
+                        // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
+                        if (last_comment_posted_by_action === "lcc-416" && sender_login === "azure-boards[bot]") {
+                            console.log(`Deleting last comment posted by action: ${last_comment_posted_by_action_id}`);
+                            yield octokit.rest.issues.deleteComment({
+                                owner: repository_owner,
+                                repo: repository_name,
+                                comment_id: last_comment_posted_by_action_id
+                            });
+                        }
                         // if the last comment is the check failed, now it passed and we can post a new comment
                         if (last_comment_posted_by_action !== "lcc-200") {
                             yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->` }));
                         }
                         return;
                     }
-                    // becuase of the sequence of events, we only would to check this if the sender is the boards bot 
-                    if (sender_login === "azure-boards[bot]") {
+                    else {
+                        // check if the description contains a link to the work item
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
                         if (last_comment_posted_by_action !== "lcc-416") {
                             yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item. [Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->` }));
