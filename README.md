@@ -19,6 +19,8 @@ The action will check the pull request description for ``AB#`` and a valid work 
 
 If the sender is ``dependabot[bot]`` the action will ignore the check.
 
+https://github.com/danhellem/github-actions-pr-is-linked-to-work-item/assets/10525048/1a63ba2d-067b-4f79-b292-b2d1118c43ed
+
 ## 🔑 Permissions
 
 You might get an error whent the action is run. If you open the error log and see something like this:
