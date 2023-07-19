@@ -105,15 +105,15 @@ async function run(): Promise<void> {
           console.log('Done.')
 
           // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
-          if (last_comment_posted_by_action === "lcc-416" && sender_login === "azure-boards[bot]") {
-            console.log(`Deleting last comment posted by action: ${last_comment_posted_by_action_id}`)
+          //if (last_comment_posted_by_action === "lcc-416" && sender_login === "azure-boards[bot]") {
+          //  console.log(`Deleting last comment posted by action: ${last_comment_posted_by_action_id}`)
             
-            await octokit.rest.issues.deleteComment({
-              owner: repository_owner,
-              repo: repository_name,
-              comment_id: last_comment_posted_by_action_id
-            })
-          }
+          //  await octokit.rest.issues.deleteComment({
+          //    owner: repository_owner,
+          //    repo: repository_name,
+          //    comment_id: last_comment_posted_by_action_id
+          //  })
+          //}
           
           // if the last comment is the check failed, now it passed and we can post a new comment
           if (last_comment_posted_by_action !== "lcc-200" && sender_login === "azure-boards[bot]") { 
