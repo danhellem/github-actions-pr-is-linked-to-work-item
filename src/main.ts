@@ -116,7 +116,7 @@ async function run(): Promise<void> {
           }
           
           // if the last comment is the check failed, now it passed and we can post a new comment
-          if (last_comment_posted_by_action !== "lcc-200") { 
+          if (last_comment_posted_by_action !== "lcc-200" && sender_login === "azure-boards[bot]") { 
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,

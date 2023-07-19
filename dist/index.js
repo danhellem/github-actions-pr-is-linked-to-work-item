@@ -135,7 +135,7 @@ function run() {
                             });
                         }
                         // if the last comment is the check failed, now it passed and we can post a new comment
-                        if (last_comment_posted_by_action !== "lcc-200") {
+                        if (last_comment_posted_by_action !== "lcc-200" && sender_login === "azure-boards[bot]") {
                             yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->` }));
                         }
                         return;
