@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
@@ -63,45 +63,8 @@ function run() {
                 return;
             }
             if (context.eventName === 'pull_request') {
-                // get all comments for the pull request
-                try {
-                    const response = yield octokit.rest.issues.listComments({
-                        owner: repository_owner,
-                        repo: repository_name,
-                        issue_number: pull_request_number,
-                    });
-                    // check for comments
-                    if (response.data.length > 0) {
-                        const comments = response.data.map((comment) => {
-                            return {
-                                id: comment.id,
-                                created_at: new Date(comment.created_at),
-                                body: comment.body
-                            };
-                        });
-                        // sort comments by date descending
-                        comments.sort((a, b) => { var _a, _b; return ((_a = b.created_at) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = a.created_at) === null || _b === void 0 ? void 0 : _b.getTime()); });
-                        // loop through comments and grab the most recent comment posted by this action
-                        // we want to use this to check later so we don't post duplicate comments
-                        for (const comment of comments) {
-                            if ((_l = comment.body) === null || _l === void 0 ? void 0 : _l.includes('lcc-404')) {
-                                last_comment_posted_by_action = "lcc-404";
-                                break;
-                            }
-                            if ((_m = comment.body) === null || _m === void 0 ? void 0 : _m.includes('lcc-416')) {
-                                last_comment_posted_by_action = "lcc-416";
-                                break;
-                            }
-                            if ((_o = comment.body) === null || _o === void 0 ? void 0 : _o.includes('lcc-200')) {
-                                last_comment_posted_by_action = "lcc-200";
-                                break;
-                            }
-                        }
-                    }
-                }
-                catch (error) {
-                    console.log(error);
-                }
+                last_comment_posted_by_action = yield getLastComment(octokit, repository_owner, repository_name, pull_request_number);
+                console.log(`Last comment posted by action: ${last_comment_posted_by_action}`);
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{ID} ...`);
                 if (ab_lookup_match) {
@@ -153,6 +116,49 @@ function run() {
         catch (error) {
             if (error instanceof Error)
                 core.setFailed(error.message);
+        }
+    });
+}
+function getLastComment(octokit, repository_owner, repository_name, pull_request_number) {
+    var _a, _b, _c;
+    return __awaiter(this, void 0, void 0, function* () {
+        // get all comments for the pull request
+        try {
+            const response = yield octokit.rest.issues.listComments({
+                owner: repository_owner,
+                repo: repository_name,
+                issue_number: pull_request_number,
+            });
+            // check for comments
+            if (response.data.length > 0) {
+                const comments = response.data.map((comment) => {
+                    return {
+                        id: comment.id,
+                        created_at: new Date(comment.created_at),
+                        body: comment.body
+                    };
+                });
+                // sort comments by date descending
+                comments.sort((a, b) => { var _a, _b; return ((_a = b.created_at) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = a.created_at) === null || _b === void 0 ? void 0 : _b.getTime()); });
+                // loop through comments and grab the most recent comment posted by this action
+                // we want to use this to check later so we don't post duplicate comments
+                for (const comment of comments) {
+                    if ((_a = comment.body) === null || _a === void 0 ? void 0 : _a.includes('lcc-404')) {
+                        return "lcc-404";
+                    }
+                    if ((_b = comment.body) === null || _b === void 0 ? void 0 : _b.includes('lcc-416')) {
+                        return "lcc-416";
+                    }
+                    if ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.includes('lcc-200')) {
+                        return "lcc-200";
+                    }
+                }
+            }
+            return "";
+        }
+        catch (error) {
+            console.log(error);
+            return "";
         }
     });
 }

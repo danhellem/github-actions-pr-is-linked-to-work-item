@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Context} from '@actions/github/lib/context'
+import { GitHub } from '@actions/github/lib/utils'
 
 async function run(): Promise<void> {
   try {
@@ -16,7 +17,7 @@ async function run(): Promise<void> {
     let work_item_id = ''
     let last_comment_posted_by_action = ""     
 
-    const octokit = github.getOctokit(github_token)    
+    const octokit: InstanceType<typeof GitHub> = github.getOctokit(github_token)    
 
     // if the sender in the azure-boards bot or dependabot, then exit code
     // nothing needs to be done
@@ -27,56 +28,13 @@ async function run(): Promise<void> {
 
     if (context.eventName === 'pull_request') {   
       
-      // get all comments for the pull request
-      try {
-        const response = await octokit.rest.issues.listComments({
-          owner: repository_owner,
-          repo: repository_name,
-          issue_number:  pull_request_number,
-        })
-
-        // check for comments
-        if (response.data.length > 0) {
-          const comments: IComments[] = response.data.map((comment) => {
-            return {
-              id: comment.id, 
-              created_at: new Date(comment.created_at),
-              body: comment.body
-            }
-          })  
-
-          // sort comments by date descending
-          comments.sort((a, b) => b.created_at?.getTime()! - a.created_at?.getTime()!) 
-          
-          // loop through comments and grab the most recent comment posted by this action
-          // we want to use this to check later so we don't post duplicate comments
-          for (const comment of comments) {     
-            
-            if (comment.body?.includes('lcc-404')) { 
-              last_comment_posted_by_action = "lcc-404"
-              break
-            }
-
-            if (comment.body?.includes('lcc-416')) { 
-              last_comment_posted_by_action = "lcc-416"
-              break
-            }        
-            
-            if (comment.body?.includes('lcc-200')) {
-              last_comment_posted_by_action = "lcc-200"
-              break
-            }
-          }          
-        }
-        
-      } catch (error) {
-        console.log(error)
-      }    
+      last_comment_posted_by_action = await getLastComment(octokit, repository_owner, repository_name, pull_request_number)
+      console.log(`Last comment posted by action: ${last_comment_posted_by_action}`)
 
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking description for AB#{ID} ...`)
      
-      if (ab_lookup_match) {        
+      if (ab_lookup_match) {
         
         for (const match of ab_lookup_match) {
           work_item_id = match.substring(3)
@@ -148,6 +106,56 @@ async function run(): Promise<void> {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_owner: string, repository_name: string, pull_request_number: number): Promise<string> {  
+  
+  // get all comments for the pull request
+  try {
+    const response = await octokit.rest.issues.listComments({
+      owner: repository_owner,
+      repo: repository_name,
+      issue_number:  pull_request_number,
+    })
+
+    // check for comments
+    if (response.data.length > 0) {
+      const comments: IComments[] = response.data.map((comment) => {
+        return {
+          id: comment.id, 
+          created_at: new Date(comment.created_at),
+          body: comment.body
+        }
+      })  
+
+      // sort comments by date descending
+      comments.sort((a, b) => b.created_at?.getTime()! - a.created_at?.getTime()!) 
+      
+      // loop through comments and grab the most recent comment posted by this action
+      // we want to use this to check later so we don't post duplicate comments
+      for (const comment of comments) {     
+        
+        if (comment.body?.includes('lcc-404')) { 
+          return "lcc-404"     
+        }
+
+        if (comment.body?.includes('lcc-416')) { 
+          return "lcc-416"        
+        }        
+        
+        if (comment.body?.includes('lcc-200')) {
+          return "lcc-200"       
+        }
+
+      }          
+    }
+
+    return ""
+    
+  } catch (error) {
+    console.log(error)
+    return ""
+  }    
 }
 
 interface IComments {
