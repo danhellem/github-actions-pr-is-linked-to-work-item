@@ -17,7 +17,9 @@ async function run(): Promise<void> {
     let work_item_id = ''
     let last_comment_posted_by_action = ""     
 
-    const octokit: InstanceType<typeof GitHub> = github.getOctokit(github_token)    
+    const octokit: InstanceType<typeof GitHub> = github.getOctokit(github_token)   
+    
+    console.log(sender_login)
 
     // if the sender in the azure-boards bot or dependabot, then exit code
     // nothing needs to be done
@@ -81,12 +83,14 @@ async function run(): Promise<void> {
               issue_number: pull_request_number,
               body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->`
             }) 
-          }
+
+            core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
+            return
+          }      
           
-          core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
-        }    
-        
-        core.warning(`Description contains AB#${work_item_id} and waiting for the azure-boards[bot] to validate the link`)
+          core.warning(`Description contains AB#${work_item_id} and waiting for the azure-boards[bot] to validate the link`)
+        }       
+       
         return
       }   
       else {   
