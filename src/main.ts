@@ -15,7 +15,7 @@ async function run(): Promise<void> {
     const sender_login: string = context.payload.sender?.login ?? ''
     
     let work_item_id = ''
-    let last_comment_posted_by_action = ""     
+    let last_comment_posted: ILastCommentPosted = {code: "", id: 0 }
 
     const octokit: InstanceType<typeof GitHub> = github.getOctokit(github_token)   
     
@@ -30,8 +30,8 @@ async function run(): Promise<void> {
 
     if (context.eventName === 'pull_request') {   
       
-      last_comment_posted_by_action = await getLastComment(octokit, repository_owner, repository_name, pull_request_number)
-      console.log(`Last comment posted by action: ${last_comment_posted_by_action}`)
+      last_comment_posted = await getLastComment(octokit, repository_owner, repository_name, pull_request_number)
+      console.log(`Last comment posted by action: ${last_comment_posted.code}`)
 
       // check if pull request description contains a AB#<work item number>
       console.log(`Checking description for AB#{ID} ...`)
@@ -49,21 +49,22 @@ async function run(): Promise<void> {
         // check if the description contains a link to the work item
         if (pull_request_description?.includes('[AB#') && pull_request_description?.includes('/_workitems/edit/')) {
           console.log(`Success: AB#${work_item_id} link found.`)
-          console.log('Done.')
-
-          // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
-          //if (last_comment_posted_by_action === "lcc-416" && sender_login === "azure-boards[bot]") {
-          //  console.log(`Deleting last comment posted by action: ${last_comment_posted_by_action_id}`)
-            
-          //  await octokit.rest.issues.deleteComment({
-          //    owner: repository_owner,
-          //    repo: repository_name,
-          //    comment_id: last_comment_posted_by_action_id
-          //  })
-          //}
+          console.log('Done.')         
           
           // if the last comment is the check failed, now it passed and we can post a new comment
-          if (last_comment_posted_by_action !== "lcc-200" && sender_login === "azure-boards[bot]") { 
+          if (last_comment_posted.code !== "lcc-200" && sender_login === "azure-boards[bot]") { 
+            
+             // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
+            if (last_comment_posted.code === "lcc-416" && sender_login === "azure-boards[bot]") {
+              console.log(`Deleting last comment posted by action: ${last_comment_posted.id}`)
+              
+              await octokit.rest.issues.deleteComment({
+                owner: repository_owner,
+                repo: repository_name,
+                comment_id: last_comment_posted.id
+              })
+            }            
+            
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
@@ -77,7 +78,7 @@ async function run(): Promise<void> {
           // check if the description contains a link to the work item
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
-          if (last_comment_posted_by_action !== "lcc-416" && sender_login !== "azure-boards[bot]") {
+          if (last_comment_posted.code !== "lcc-416" && sender_login !== "azure-boards[bot]") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
@@ -94,7 +95,7 @@ async function run(): Promise<void> {
         return
       }   
       else {   
-          if (last_comment_posted_by_action !== "lcc-404") {
+          if (last_comment_posted.code !== "lcc-404") {
             await octokit.rest.issues.createComment({
               ...context.repo,
               issue_number: pull_request_number,
@@ -112,8 +113,10 @@ async function run(): Promise<void> {
   }
 }
 
-async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_owner: string, repository_name: string, pull_request_number: number): Promise<string> {  
+async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_owner: string, repository_name: string, pull_request_number: number): Promise<ILastCommentPosted> {  
   
+  const last_comment_posted: ILastCommentPosted = {code: "", id: 0 }
+
   // get all comments for the pull request
   try {
     const response = await octokit.rest.issues.listComments({
@@ -138,28 +141,37 @@ async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_o
       // loop through comments and grab the most recent comment posted by this action
       // we want to use this to check later so we don't post duplicate comments
       for (const comment of comments) {     
+
+        last_comment_posted.id = comment.id ?? 0
         
         if (comment.body?.includes('lcc-404')) { 
-          return "lcc-404"     
+          last_comment_posted.code = "lcc-404"
+          break            
         }
 
         if (comment.body?.includes('lcc-416')) { 
-          return "lcc-416"        
+          last_comment_posted.code = "lcc-416"   
+          break               
         }        
         
         if (comment.body?.includes('lcc-200')) {
-          return "lcc-200"       
+          last_comment_posted.code = "lcc-200"    
+          break   
         }
 
-      }          
-    }
-
-    return ""
+      }         
+    }    
     
   } catch (error) {
-    console.log(error)
-    return ""
+    console.log(error)    
   }    
+
+  return last_comment_posted
+}
+
+interface ILastCommentPosted {
+  code: string,
+  id: number,
 }
 
 interface IComments {

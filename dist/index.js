@@ -54,7 +54,7 @@ function run() {
             const repository_name = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : '';
             const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
             let work_item_id = '';
-            let last_comment_posted_by_action = "";
+            let last_comment_posted = { code: "", id: 0 };
             const octokit = github.getOctokit(github_token);
             console.log(sender_login);
             // if the sender in the azure-boards bot or dependabot, then exit code
@@ -64,8 +64,8 @@ function run() {
                 return;
             }
             if (context.eventName === 'pull_request') {
-                last_comment_posted_by_action = yield getLastComment(octokit, repository_owner, repository_name, pull_request_number);
-                console.log(`Last comment posted by action: ${last_comment_posted_by_action}`);
+                last_comment_posted = yield getLastComment(octokit, repository_owner, repository_name, pull_request_number);
+                console.log(`Last comment posted by action: ${last_comment_posted.code}`);
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{ID} ...`);
                 if (ab_lookup_match) {
@@ -79,17 +79,17 @@ function run() {
                     if ((pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('[AB#')) && (pull_request_description === null || pull_request_description === void 0 ? void 0 : pull_request_description.includes('/_workitems/edit/'))) {
                         console.log(`Success: AB#${work_item_id} link found.`);
                         console.log('Done.');
-                        // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
-                        //if (last_comment_posted_by_action === "lcc-416" && sender_login === "azure-boards[bot]") {
-                        //  console.log(`Deleting last comment posted by action: ${last_comment_posted_by_action_id}`)
-                        //  await octokit.rest.issues.deleteComment({
-                        //    owner: repository_owner,
-                        //    repo: repository_name,
-                        //    comment_id: last_comment_posted_by_action_id
-                        //  })
-                        //}
                         // if the last comment is the check failed, now it passed and we can post a new comment
-                        if (last_comment_posted_by_action !== "lcc-200" && sender_login === "azure-boards[bot]") {
+                        if (last_comment_posted.code !== "lcc-200" && sender_login === "azure-boards[bot]") {
+                            // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
+                            if (last_comment_posted.code === "lcc-416" && sender_login === "azure-boards[bot]") {
+                                console.log(`Deleting last comment posted by action: ${last_comment_posted.id}`);
+                                yield octokit.rest.issues.deleteComment({
+                                    owner: repository_owner,
+                                    repo: repository_name,
+                                    comment_id: last_comment_posted.id
+                                });
+                            }
                             yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->` }));
                         }
                         return;
@@ -97,7 +97,7 @@ function run() {
                     else {
                         // check if the description contains a link to the work item
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
-                        if (last_comment_posted_by_action !== "lcc-416" && sender_login !== "azure-boards[bot]") {
+                        if (last_comment_posted.code !== "lcc-416" && sender_login !== "azure-boards[bot]") {
                             yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->` }));
                             core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`);
                             return;
@@ -107,7 +107,7 @@ function run() {
                     return;
                 }
                 else {
-                    if (last_comment_posted_by_action !== "lcc-404") {
+                    if (last_comment_posted.code !== "lcc-404") {
                         yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description does not contain AB#{ID}.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->` }));
                     }
                     core.setFailed('Description does not contain AB#{ID}');
@@ -122,8 +122,9 @@ function run() {
     });
 }
 function getLastComment(octokit, repository_owner, repository_name, pull_request_number) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
+        const last_comment_posted = { code: "", id: 0 };
         // get all comments for the pull request
         try {
             const response = yield octokit.rest.issues.listComments({
@@ -145,23 +146,26 @@ function getLastComment(octokit, repository_owner, repository_name, pull_request
                 // loop through comments and grab the most recent comment posted by this action
                 // we want to use this to check later so we don't post duplicate comments
                 for (const comment of comments) {
-                    if ((_a = comment.body) === null || _a === void 0 ? void 0 : _a.includes('lcc-404')) {
-                        return "lcc-404";
+                    last_comment_posted.id = (_a = comment.id) !== null && _a !== void 0 ? _a : 0;
+                    if ((_b = comment.body) === null || _b === void 0 ? void 0 : _b.includes('lcc-404')) {
+                        last_comment_posted.code = "lcc-404";
+                        break;
                     }
-                    if ((_b = comment.body) === null || _b === void 0 ? void 0 : _b.includes('lcc-416')) {
-                        return "lcc-416";
+                    if ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.includes('lcc-416')) {
+                        last_comment_posted.code = "lcc-416";
+                        break;
                     }
-                    if ((_c = comment.body) === null || _c === void 0 ? void 0 : _c.includes('lcc-200')) {
-                        return "lcc-200";
+                    if ((_d = comment.body) === null || _d === void 0 ? void 0 : _d.includes('lcc-200')) {
+                        last_comment_posted.code = "lcc-200";
+                        break;
                     }
                 }
             }
-            return "";
         }
         catch (error) {
             console.log(error);
-            return "";
         }
+        return last_comment_posted;
     });
 }
 run();
