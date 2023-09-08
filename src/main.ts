@@ -34,9 +34,7 @@ async function run(): Promise<void> {
       console.log(`Last comment posted by action: ${last_comment_posted.code}`)
 
       // check if pull request description contains a AB#<work item number>
-      console.log(`Checking description for AB#{ID} ...`)
-
-      listWorkFlowRuns(octokit, repository_owner, repository_name);
+      console.log(`Checking description for AB#{ID} ...`)     
      
       if (ab_lookup_match) {
         

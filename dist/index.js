@@ -68,7 +68,6 @@ function run() {
                 console.log(`Last comment posted by action: ${last_comment_posted.code}`);
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{ID} ...`);
-                listWorkFlowRuns(octokit, repository_owner, repository_name);
                 if (ab_lookup_match) {
                     for (const match of ab_lookup_match) {
                         work_item_id = match.substring(3);
