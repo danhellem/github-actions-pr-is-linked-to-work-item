@@ -68,6 +68,7 @@ function run() {
                 console.log(`Last comment posted by action: ${last_comment_posted.code}`);
                 // check if pull request description contains a AB#<work item number>
                 console.log(`Checking description for AB#{ID} ...`);
+                listWorkFlowRuns(octokit, repository_owner, repository_name);
                 if (ab_lookup_match) {
                     for (const match of ab_lookup_match) {
                         work_item_id = match.substring(3);
@@ -81,7 +82,7 @@ function run() {
                         console.log('Done.');
                         // if the last comment is the check failed, now it passed and we can post a new comment
                         if (last_comment_posted.code !== "lcc-200" && sender_login === "azure-boards[bot]") {
-                            // if the last check failed, then the azure-boards[bot ran and passed, we can delete the last comment
+                            // if the last check failed, then the azure-boards[bot] ran and passed, we can delete the last comment
                             if (last_comment_posted.code === "lcc-416" && sender_login === "azure-boards[bot]") {
                                 console.log(`Deleting last comment posted by action: ${last_comment_posted.id}`);
                                 yield octokit.rest.issues.deleteComment({
@@ -118,6 +119,19 @@ function run() {
         catch (error) {
             if (error instanceof Error)
                 core.setFailed(error.message);
+        }
+    });
+}
+function listWorkFlowRuns(octokit, repository_owner, repository_name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield octokit.rest.actions.listWorkflowRunsForRepo({
+            owner: repository_owner,
+            repo: repository_name,
+            event: 'pull_request',
+        });
+        // check for runs
+        if (response.data.total_count > 0) {
+            console.log(response.data.workflow_runs);
         }
     });
 }
