@@ -65,7 +65,3 @@ jobs:
     steps:
       - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
 ```
-
-## 🪲 Known issues
-
-- Becuase of how the Azure Boards Bot works, it triggers the action multiple times when creating the link. The events fire at the same time. This can generate multiple messages. We need to be checking to see if the check is already running and then delay. This should solve the problem. See [this issue](https://github.com/danhellem/github-actions-pr-is-linked-to-work-item/issues/88) if you would like to help.
