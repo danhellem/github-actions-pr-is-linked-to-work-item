@@ -44,6 +44,8 @@ async function run(): Promise<void> {
         }
 
         console.log(`work_item_id: ${work_item_id};`)
+        core.setOutput("work_item_id", work_item_id);
+        core.info(`Extracted work item ID: ${work_item_id}`);
 
         // Validate work_item_id is a valid integer
         if (!/^\d+$/.test(work_item_id)) {
