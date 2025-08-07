@@ -28,8 +28,13 @@ async function run(): Promise<void> {
       return
     }
 
+    console.log(context.eventName);
+
     if (context.eventName === 'pull_request') {   
       
+      console.log(`Hello world!`)
+
+    
       last_comment_posted = await getLastComment(octokit, repository_owner, repository_name, pull_request_number)
       console.log(`Last comment posted by action: ${last_comment_posted.code}`)
 
