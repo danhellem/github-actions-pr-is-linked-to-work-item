@@ -3,6 +3,24 @@ import * as github from '@actions/github'
 import {Context} from '@actions/github/lib/context'
 import { GitHub } from '@actions/github/lib/utils'
 
+// Helper function to handle API calls with proper error handling
+async function handleAPICall<T>(operation: () => Promise<T>, errorMessage: string): Promise<T> {
+  try {
+    return await operation()
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes('Resource not accessible by integration') || 
+          error.message.includes('403')) {
+        core.setFailed(`${errorMessage}. This is likely due to insufficient permissions. Please ensure the GitHub token has the necessary permissions to create comments and access issues.`)
+        throw error
+      }
+      core.setFailed(`${errorMessage}: ${error.message}`)
+      throw error
+    }
+    throw error
+  }
+}
+
 async function run(): Promise<void> {
   try {
     const context: Context = github.context
@@ -58,18 +76,24 @@ async function run(): Promise<void> {
             if (last_comment_posted.code === "lcc-416" && sender_login === "azure-boards[bot]") {
               console.log(`Deleting last comment posted by action: ${last_comment_posted.id}`)
               
-              await octokit.rest.issues.deleteComment({
-                owner: repository_owner,
-                repo: repository_name,
-                comment_id: last_comment_posted.id
-              })
+              await handleAPICall(
+                () => octokit.rest.issues.deleteComment({
+                  owner: repository_owner,
+                  repo: repository_name,
+                  comment_id: last_comment_posted.id
+                }),
+                'Failed to delete comment'
+              )
             }            
             
-            await octokit.rest.issues.createComment({
-              ...context.repo,
-              issue_number: pull_request_number,
-              body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->`
-            })
+            await handleAPICall(
+              () => octokit.rest.issues.createComment({
+                ...context.repo,
+                issue_number: pull_request_number,
+                body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->`
+              }),
+              'Failed to create success comment'
+            )
           }
 
           return
@@ -79,11 +103,14 @@ async function run(): Promise<void> {
           console.log(`Bot did not create a link from AB#${work_item_id}`)
           
           if (last_comment_posted.code !== "lcc-416" && sender_login !== "azure-boards[bot]") {
-            await octokit.rest.issues.createComment({
-              ...context.repo,
-              issue_number: pull_request_number,
-              body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->`
-            }) 
+            await handleAPICall(
+              () => octokit.rest.issues.createComment({
+                ...context.repo,
+                issue_number: pull_request_number,
+                body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->`
+              }),
+              'Failed to create failure comment'
+            ) 
 
             core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`)
             return
@@ -96,11 +123,14 @@ async function run(): Promise<void> {
       }   
       else {   
           if (last_comment_posted.code !== "lcc-404") {
-            await octokit.rest.issues.createComment({
-              ...context.repo,
-              issue_number: pull_request_number,
-              body: `❌ Work item link check failed. Description does not contain AB#{ID}.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->`
-            }) 
+            await handleAPICall(
+              () => octokit.rest.issues.createComment({
+                ...context.repo,
+                issue_number: pull_request_number,
+                body: `❌ Work item link check failed. Description does not contain AB#{ID}.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->`
+              }),
+              'Failed to create missing AB# comment'
+            )
           }
 
           core.setFailed('Description does not contain AB#{ID}')
@@ -133,11 +163,14 @@ async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_o
 
   // get all comments for the pull request
   try {
-    const response = await octokit.rest.issues.listComments({
-      owner: repository_owner,
-      repo: repository_name,
-      issue_number:  pull_request_number,
-    })
+    const response = await handleAPICall(
+      () => octokit.rest.issues.listComments({
+        owner: repository_owner,
+        repo: repository_name,
+        issue_number:  pull_request_number,
+      }),
+      'Failed to fetch comments'
+    )
 
     // check for comments
     if (response.data.length > 0) {
@@ -177,7 +210,9 @@ async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_o
     }    
     
   } catch (error) {
-    console.log(error)    
+    console.log(error)
+    // Re-throw the error since handleAPICall already handled the error message
+    throw error
   }    
 
   return last_comment_posted

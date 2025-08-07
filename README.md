@@ -23,13 +23,38 @@ https://github.com/danhellem/github-actions-pr-is-linked-to-work-item/assets/105
 
 ## 🔑 Permissions
 
-You might get an error whent the action is run. If you open the error log and see something like this:
+You might get an error when the action is run. If you open the error log and see something like this:
 
 ``
 "Error: Resource not accessible by integration" 
 ``
 
-To fix this, go to ``https://github.com/{owner}/{repo}/settings/actions`` and in **Workflow Permissions** section give actions **Read and Write permissions**. That provides the token with rights to modify your repo and solves your problem.
+There are two ways to fix this:
+
+### Option 1: Repository-level permissions (Recommended for personal repos)
+
+Go to ``https://github.com/{owner}/{repo}/settings/actions`` and in **Workflow Permissions** section give actions **Read and Write permissions**. That provides the token with rights to modify your repo and solves your problem.
+
+### Option 2: Job-level permissions (Recommended for organizations)
+
+If you're in an organization where repository-level permissions are restricted, you can specify permissions at the job level in your workflow file:
+
+```yml
+jobs:
+  workitem-check:
+    name: Description contains AB# with a valid work item id
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
+    steps:
+      - uses: danhellem/github-actions-pr-is-linked-to-work-item@v1.2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+This approach is often preferred in enterprise environments where global repository permissions may be disabled.
 
 ## ✅ Codes
 
@@ -62,6 +87,12 @@ jobs:
   create-edit-comment:
     name: check   
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
     steps:
       - uses: danhellem/github-actions-pr-is-linked-to-work-item@main
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```

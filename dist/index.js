@@ -41,6 +41,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+// Helper function to handle API calls with proper error handling
+function handleAPICall(operation, errorMessage) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            return yield operation();
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                if (error.message.includes('Resource not accessible by integration') ||
+                    error.message.includes('403')) {
+                    core.setFailed(`${errorMessage}. This is likely due to insufficient permissions. Please ensure the GitHub token has the necessary permissions to create comments and access issues.`);
+                    throw error;
+                }
+                core.setFailed(`${errorMessage}: ${error.message}`);
+                throw error;
+            }
+            throw error;
+        }
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
@@ -84,13 +104,13 @@ function run() {
                             // if the last check failed, then the azure-boards[bot] ran and passed, we can delete the last comment
                             if (last_comment_posted.code === "lcc-416" && sender_login === "azure-boards[bot]") {
                                 console.log(`Deleting last comment posted by action: ${last_comment_posted.id}`);
-                                yield octokit.rest.issues.deleteComment({
+                                yield handleAPICall(() => octokit.rest.issues.deleteComment({
                                     owner: repository_owner,
                                     repo: repository_name,
                                     comment_id: last_comment_posted.id
-                                });
+                                }), 'Failed to delete comment');
                             }
-                            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->` }));
+                            yield handleAPICall(() => octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `✅ Work item link check complete. Description contains link AB#${work_item_id} to an Azure Boards work item.\n\n<!-- code: lcc-200 -->` })), 'Failed to create success comment');
                         }
                         return;
                     }
@@ -98,7 +118,7 @@ function run() {
                         // check if the description contains a link to the work item
                         console.log(`Bot did not create a link from AB#${work_item_id}`);
                         if (last_comment_posted.code !== "lcc-416" && sender_login !== "azure-boards[bot]") {
-                            yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->` }));
+                            yield handleAPICall(() => octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!--code: lcc-416-->` })), 'Failed to create failure comment');
                             core.setFailed(`Description contains AB#${work_item_id} but the Bot could not link it to an Azure Boards work item`);
                             return;
                         }
@@ -108,7 +128,7 @@ function run() {
                 }
                 else {
                     if (last_comment_posted.code !== "lcc-404") {
-                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description does not contain AB#{ID}.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->` }));
+                        yield handleAPICall(() => octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `❌ Work item link check failed. Description does not contain AB#{ID}.\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to Learn more.\n\n<!-- code: lcc-404 -->` })), 'Failed to create missing AB# comment');
                     }
                     core.setFailed('Description does not contain AB#{ID}');
                 }
@@ -140,11 +160,11 @@ function getLastComment(octokit, repository_owner, repository_name, pull_request
         const last_comment_posted = { code: "", id: 0 };
         // get all comments for the pull request
         try {
-            const response = yield octokit.rest.issues.listComments({
+            const response = yield handleAPICall(() => octokit.rest.issues.listComments({
                 owner: repository_owner,
                 repo: repository_name,
                 issue_number: pull_request_number,
-            });
+            }), 'Failed to fetch comments');
             // check for comments
             if (response.data.length > 0) {
                 const comments = response.data.map((comment) => {
@@ -177,6 +197,8 @@ function getLastComment(octokit, repository_owner, repository_name, pull_request
         }
         catch (error) {
             console.log(error);
+            // Re-throw the error since handleAPICall already handled the error message
+            throw error;
         }
         return last_comment_posted;
     });
