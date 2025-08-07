@@ -63,7 +63,9 @@ function run() {
                 console.log(`dependabot[bot] sender, exiting action.`);
                 return;
             }
+            console.log(context.eventName);
             if (context.eventName === 'pull_request') {
+                console.log(`Hello world!`);
                 last_comment_posted = yield getLastComment(octokit, repository_owner, repository_name, pull_request_number);
                 console.log(`Last comment posted by action: ${last_comment_posted.code}`);
                 // check if pull request description contains a AB#<work item number>
@@ -72,6 +74,17 @@ function run() {
                     for (const match of ab_lookup_match) {
                         work_item_id = match.substring(3);
                         break;
+                    }
+                    console.log(`work_item_id: ${work_item_id};`);
+                    core.setOutput("work_item_id", work_item_id);
+                    core.info(`Extracted work item ID: ${work_item_id}`);
+                    // Validate work_item_id is a valid integer
+                    if (!/^\d+$/.test(work_item_id)) {
+                        const errorMsg = `❌ Invalid work item number: AB#${work_item_id}. Work item number must be a valid integer.`;
+                        console.log(errorMsg);
+                        yield octokit.rest.issues.createComment(Object.assign(Object.assign({}, context.repo), { issue_number: pull_request_number, body: `${errorMsg}\n\n[Click here](https://learn.microsoft.com/en-us/azure/devops/boards/github/link-to-from-github?view=azure-devops#use-ab-mention-to-link-from-github-to-azure-boards-work-items) to learn more.\n\n<!-- code: lcc-416 -->` }));
+                        core.setFailed(errorMsg);
+                        return;
                     }
                     console.log(`AB#${work_item_id} found in pull request description.`);
                     console.log(`Checking to see if bot created link ...`);
