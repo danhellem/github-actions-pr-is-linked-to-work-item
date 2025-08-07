@@ -43,6 +43,8 @@ async function run(): Promise<void> {
           break    
         }
 
+        console.log(`work_item_id: ${work_item_id};`)
+
         // Validate work_item_id is a valid integer
         if (!/^\d+$/.test(work_item_id)) {
           const errorMsg = `❌ Invalid work item number: AB#${work_item_id}. Work item number must be a valid integer.`
