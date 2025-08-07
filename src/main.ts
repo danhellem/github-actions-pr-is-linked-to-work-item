@@ -211,7 +211,7 @@ async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_o
     
   } catch (error) {
     console.log(error)
-    // Re-throw the error since handleAPICall already handled the error message
+    // Don't keep going
     throw error
   }    
 
