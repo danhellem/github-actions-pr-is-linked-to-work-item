@@ -28,13 +28,8 @@ async function run(): Promise<void> {
       return
     }
 
-    console.log(context.eventName);
-
     if (context.eventName === 'pull_request') {   
       
-      console.log(`Hello world!`)
-
-    
       last_comment_posted = await getLastComment(octokit, repository_owner, repository_name, pull_request_number)
       console.log(`Last comment posted by action: ${last_comment_posted.code}`)
 
@@ -47,10 +42,6 @@ async function run(): Promise<void> {
           work_item_id = match.substring(3)
           break    
         }
-
-        console.log(`work_item_id: ${work_item_id};`)
-        core.setOutput("work_item_id", work_item_id);
-        core.info(`Extracted work item ID: ${work_item_id}`);
 
         // Validate work_item_id is a valid integer
         if (!/^\d+$/.test(work_item_id)) {
