@@ -1,7 +1,7 @@
-import js from '@eslint/js'
-import tsEslint from 'typescript-eslint'
+const js = require('@eslint/js')
+const tsEslint = require('typescript-eslint')
 
-export default [
+module.exports = [
   {
     ignores: ['dist/', 'lib/', 'node_modules/', 'jest.config.js']
   },
