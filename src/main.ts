@@ -120,25 +120,10 @@ async function run(): Promise<void> {
       }    
     } 
 
-    octokit == null
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
-
-async function listWorkFlowRuns(octokit: InstanceType<typeof GitHub>, repository_owner: string, repository_name: string) {
-  const response = await octokit.rest.actions.listWorkflowRunsForRepo({      
-      owner: repository_owner,
-      repo: repository_name,
-      event: 'pull_request',      
-    }) 
-
-    // check for runs
-    if (response.data.total_count > 0) {
-      console.log(response.data.workflow_runs);
-    } 
-}
-
 
 async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_owner: string, repository_name: string, pull_request_number: number): Promise<ILastCommentPosted> {  
   
@@ -163,7 +148,11 @@ async function getLastComment(octokit: InstanceType<typeof GitHub>, repository_o
       })  
 
       // sort comments by date descending
-      comments.sort((a, b) => b.created_at?.getTime()! - a.created_at?.getTime()!) 
+      comments.sort((a, b) => {
+        const aTime = a.created_at?.getTime() ?? 0
+        const bTime = b.created_at?.getTime() ?? 0
+        return bTime - aTime
+      }) 
       
       // loop through comments and grab the most recent comment posted by this action
       // we want to use this to check later so we don't post duplicate comments
