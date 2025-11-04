@@ -9,7 +9,7 @@
     "format": "prettier --write \"**/*.ts\"",
     "format-check": "prettier --check \"**/*.ts\"",
     "lint": "eslint src/**/*.ts",
-    "package": "ncc build --source-map --license licenses.txt",
+    "package": "ncc build --source-map --license licenses.txt && echo {\"type\":\"commonjs\"} > dist/package.json",
     "test": "jest",
     "all": "npm run build && npm run package",
     "clean": "shx rm -rf dist"
