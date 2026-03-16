@@ -9,7 +9,7 @@ async function run(): Promise<void> {
     const github_token: string = core.getInput('repo-token')    
     const pull_request_number: number = context.payload.pull_request?.number ?? 0    
     const pull_request_description: string = context.payload.pull_request?.body ?? ''    
-    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/AB#([^ \]]+)/g) 
+    const ab_lookup_match: RegExpMatchArray | null = pull_request_description.match(/AB#(\d+)/g) 
     const repository_owner: string = context.payload.repository?.owner.login ?? '' 
     const repository_name: string = context.payload.repository?.name ?? ''
     const sender_login: string = context.payload.sender?.login ?? ''
