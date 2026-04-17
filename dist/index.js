@@ -59,7 +59,7 @@ function run() {
             const github_token = core.getInput('repo-token');
             const pull_request_number = (_b = (_a = context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.number) !== null && _b !== void 0 ? _b : 0;
             const pull_request_description = (_d = (_c = context.payload.pull_request) === null || _c === void 0 ? void 0 : _c.body) !== null && _d !== void 0 ? _d : '';
-            const ab_lookup_match = pull_request_description.match(/AB#([^ \]]+)/g);
+            const ab_lookup_match = pull_request_description.match(/AB#(\d+)/g);
             const repository_owner = (_f = (_e = context.payload.repository) === null || _e === void 0 ? void 0 : _e.owner.login) !== null && _f !== void 0 ? _f : '';
             const repository_name = (_h = (_g = context.payload.repository) === null || _g === void 0 ? void 0 : _g.name) !== null && _h !== void 0 ? _h : '';
             const sender_login = (_k = (_j = context.payload.sender) === null || _j === void 0 ? void 0 : _j.login) !== null && _k !== void 0 ? _k : '';
