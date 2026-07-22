@@ -1,3 +1,6 @@
+> [!WARNING]
+> **Archived:** This repository is no longer actively maintained, and this tool is no longer supported. It is being retained for reference purposes only.
+
 # Check for a linked Azure DevOps work item
 
 Use this action to check your pull request to make sure it is linked to a work item using ``AB#`` before you can merge.
